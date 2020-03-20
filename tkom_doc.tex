@@ -1,0 +1,239 @@
+\documentclass[12pt,a4paper]{article}
+
+
+\usepackage{polski}
+\usepackage{listings}
+\usepackage{rail}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+
+
+\title{Dokumentacja do projektu z TKOM}
+
+\author{Roman Moskalenko}
+\date{}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\pagebreak
+
+\section{Treść zadania}
+Interpreter własnego języka z wbudowanym typem macierzy dwuwymiarowej.
+
+\section{Projekt wstępny}
+\subsection{Założenia ogólne}
+
+Fantastic Matrix Language (Fantastyczny język macierzowy, dalej FML) jest językiem skryptowym dynamicznie typowanym. Na ogół przypomina uproszczoną składnię Python'a oraz języka C, co jest pokazane na przykładach poniżej.
+
+%
+% Słowa kluczowe
+%
+\subsection{Słowa kluczowe}
+
+FML łącznie zawiera 20 słów kluczowych, które są przedstawione poniżej.
+
+\begin{lstlisting}
+and break case continue default div do else for fun if 
+in is mod not null or return switch while
+\end{lstlisting}
+
+\begin{itemize}
+\item Operatory logiczne: \textbf{and, not, or}
+
+\item Konstrukcja switch/case: \textbf{break, case, default, switch}
+
+\item Konstrukcje pętlowe: \textbf{continue, do, for, in, while}
+
+\item Operatory arytmetyczne: \textbf{div, mod}
+
+\item Konstrukcje warunkowe: \textbf{else, if}
+
+\item Konstrukcje funkcji: \textbf{fun, return}
+
+\item Operator identyczności: \textbf{is}
+
+\item Objekt pusty: \textbf{null}
+
+\end{itemize}
+\pagebreak
+
+%
+% Identyfikatory i typy danych
+%
+\subsection{Identyfikatory i typy danych}
+
+\subsubsection{Indentyfikator}
+
+Poniższy diagram ilustruje poprawne tworzenie identyfikatorów w FML.
+
+%
+% some railroad magic
+%
+\begin{rail}
+
+identifier : letter ((letter ? | digit | 'underscore' ) +);
+     
+\end{rail}
+
+
+FML oferuje 3 typy danych: \textbf{skalar}, \textbf{macierz} oraz \textbf{string}. 
+
+\subsubsection{Skalar}
+
+Skalarem jest liczba, zapis której opisany diagramem poniżej:
+
+\begin{rail}
+
+scalarNoExp : '-' ? ('0' | (digit[1-9] (digit +))) ('.' (digit +))? ;
+scalar : ''[scalarNoExp] (('e' | 'E') ('-' | '+') (digit+))?
+
+\end{rail}
+
+Przykłady:
+\begin{itemize}
+\item 0, 1, -12.3, 12.3e4, 12.3e-45.
+\end{itemize}
+
+\pagebreak
+\subsubsection{String}
+String jest to łańcuch symboli. Diagram:
+
+\hspace*{-2cm}\vbox
+{
+  \begin{rail}
+
+    string : '"' (('character' ('backslash' ('backslash' | '"' | 't' | 'n'))?)+)? '"';
+
+  \end{rail}
+}
+
+gdzie \emph{character} jest dowolnym znakiem oprócz " i \verb+\+ oraz znaków kontrolnych.
+
+\medskip
+Przykłady:
+\begin{itemize}
+
+\item "Hello world!\verb+\n+"
+
+\item "Ala nie ma\verb+\t+ kota"
+\end{itemize}
+
+\subsubsection{Macierz}
+Macierz jest tablicą dwuwymiarową, która może zawierać skalary, stringi, wartości \textbf{null}, lub inne macierzy. Dla wygody skorzystamy z pojęć \textbf{whitespace} oraz \textbf{expression} (opisane w rozdziale \emph{Wyrażenia i operatory}).
+
+\begin{rail}
+  whitespace : (([space]'' | [linefeed]'' | [horizontal tab]'')+)?;
+  
+\end{rail}
+
+\hspace*{-3cm}\scalebox{0.9}{
+  \vbox{
+    \begin{rail}
+
+      matrix : '[' (((whitespace+)?) | ((whitespace+)? expression (whitespace+)? + (',' | ';'))) ']';
+  
+    \end{rail}
+  }
+}
+
+\bigskip
+Znak \textbf{,} jest używany dla separacji kolejnych elementów w jednym wierszu macierzy. Znak \textbf{;} jest używany dla separacji kolejnych wierszów. Wiersz macierzy nie może być pusty, chyba, że cała macierz jest pusta. Liczba elementów w każdym wierszu macierzy musi być taka sama.
+
+\bigskip
+Przykłady:
+
+\begin{itemize}
+
+\item {[ ]}
+
+\item {[1, 2, 3, 4, 5]}
+
+\item {[1, 2, 3; 4, 5, 6; 7, 8, 9]}
+
+\item {[\\
+        1, 2;\\
+        3, 4;\\
+        5, 6\\
+       ]}
+       
+\item {["String", identifier; 1.0e-0, [ ] ]}
+
+\end{itemize}
+
+\subsection{Wyrażenia i operatory}
+
+\subsubsection{Operatory}
+Język FML ma operatory \textbf{arytmetyczne} oraz \textbf{logiczne}.
+
+\medskip
+\begin{itemize}
+  \item Arytmetyczne: 
+  \begin{itemize}
+
+    \item jednoargumentowe: 
+    \textbf{-}, \textbf{!}, \textbf{!!},
+  
+    \item dwuargumentowe:
+    \textbf{+}, \textbf{-}, \textbf{/}, \textbf{*}, \textbf{**}, \textbf{div}, \textbf{mod}.
+    
+  \end{itemize}
+  
+  \item Logiczne
+  \begin{itemize}
+  
+    \item jednoargumentowe:
+    \textbf{not}
+    \item dwuargumentowe:
+    \textbf{==}, \textbf{$<$}, \textbf{$<=$}, \textbf{$>$}, \textbf{$>=$}, \textbf{and}, \textbf{or} 
+    \item trójargumentowy:
+    \textbf{? :}
+  \end{itemize}
+\end{itemize}
+
+Należy zwrócić uwagę na to, że operatory unarne \textbf{-} i \textbf{not} mają łączność lewostronną, zaś operatory \textbf{!} i \textbf{!!} -- prawostronną.
+
+\subsubsection{Wyrażenia}
+
+Wyrażenie może być pojedynczą zmienną, lub też pewną operacją na zmiennych. Dla ustalenia kolejności operacji mogą być stosowane nawiasy okrągłe: \textbf{(} i \textbf{)}. Wyrażenie nie może być puste, nie może zawierać samych nawiasów.
+
+\begin{rail}
+
+expression : (identifier | value) | ('left unary operator' expression ) | (expression 'right unary operator') | (expression 'binary operator' expression) | (expression '?' expression ':' expression) | ('('?(expression)')'? )
+
+\end{rail}
+
+\subsubsection{Przypisanie wartości identyfikatorowi}
+
+Przypisanie jest dokonywane za pomocą operatora przypisania \textbf{=}. 
+
+\begin{rail}
+
+assignment : identifier '=' expression
+
+\end{rail}
+
+\subsection{Pętle, funkcje, konstrukcje warunkowe}
+
+\subsubsection{Instrukcja}
+
+Podstawowa operacja w pętlach, funkcjach itd.
+Każda instrukcja musi być zakończona znakiem średnikiem. Na diagramie poniżej pojawia się pojęcie funcji, są opisane w podrozdziale poniżej.
+
+\begin{rail}
+      instruction : (assignment | expression | 'function call') ';';
+      statement : instruction | ( '<' (instruction +)  '>' );
+
+\end{rail}
+
+\footnote{Uwaga: zamiast \textbf{$< >$} powinne stać znaki \textbf{$\{ \}$}. Latexu z niewiadomego mi powodu nie podoba się użycie klamrowych nawiasów.}
+
+
+\end{document}
