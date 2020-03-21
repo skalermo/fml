@@ -5,6 +5,7 @@
 \usepackage{listings}
 \usepackage{rail}
 \usepackage{graphicx}
+\usepackage[bottom]{footmisc}
 \usepackage{hyperref}
 \hypersetup{
     colorlinks,
@@ -16,47 +17,59 @@
 
 
 \title{Dokumentacja do projektu z TKOM}
-
 \author{Roman Moskalenko}
 \date{}
 
 \begin{document}
+
 \maketitle
 \tableofcontents
 \pagebreak
 
 \section{Treść zadania}
-Interpreter własnego języka z wbudowanym typem macierzy dwuwymiarowej.
+Interpretacja własnego języka z wbudowanym typem macierzy dwuwymiarowej.
 
 \section{Projekt wstępny}
-\subsection{Założenia ogólne}
+\subsection{Opis ogólny}
 
-Fantastic Matrix Language (Fantastyczny język macierzowy, dalej FML) jest językiem skryptowym dynamicznie typowanym. Na ogół przypomina uproszczoną składnię Python'a oraz języka C, co jest pokazane na przykładach poniżej.
+Fantastic Matrix Language (Fantastyczny język macierzowy, dalej FML) jest językiem skryptowym dynamicznie typowanym. Można go traktować jako uproszczone połączenie \emph{Pythona} i \emph{C}. 
+
+Wszystkie białe znaki (whitespace) są ignorowane
+\footnote{Wyjątkiem są znaki będące zawartością stringa(zapisane pomiędzy nawiasów \textbf{"" }).}
+ przez interpreter, dlatego nie zostaną uwzględnione na większości diagramów co pozwoli je uprościć. Także ignorowane są komentarze poprzedzone znakiem \textbf{\#} (jednoliniowe).
+
+\begin{rail}
+
+  whitespace : (([space]'' | [linefeed]'' | [horizontal tab]'')+)?;  
+
+\end{rail}
+
+Interpreter musi być w stanie obsługiwać różne typy źródeł: string, plik, strumień.
+
+\pagebreak
 
 %
 % Słowa kluczowe
 %
 \subsection{Słowa kluczowe}
 
-FML łącznie zawiera 20 słów kluczowych, które są przedstawione poniżej.
+FML łącznie zawiera 17 słów kluczowych, które są przedstawione poniżej.
 
 \begin{lstlisting}
-and break case continue default div do else for fun if 
-in is mod not null or return switch while
+and break continue div do else for fun if 
+in is mod not null or ret while
 \end{lstlisting}
 
 \begin{itemize}
 \item Operatory logiczne: \textbf{and, not, or}
 
-\item Konstrukcja switch/case: \textbf{break, case, default, switch}
-
-\item Konstrukcje pętlowe: \textbf{continue, do, for, in, while}
+\item Konstrukcje pętlowe: \textbf{break, continue, do, for, in, while}
 
 \item Operatory arytmetyczne: \textbf{div, mod}
 
 \item Konstrukcje warunkowe: \textbf{else, if}
 
-\item Konstrukcje funkcji: \textbf{fun, return}
+\item Konstrukcje funkcji: \textbf{fun, ret}
 
 \item Operator identyczności: \textbf{is}
 
@@ -84,7 +97,7 @@ identifier : letter ((letter ? | digit | 'underscore' ) +);
 \end{rail}
 
 
-FML oferuje 3 typy danych: \textbf{skalar}, \textbf{macierz} oraz \textbf{string}. 
+FML oferuje 3 typy danych: \textbf{skalar}, \textbf{macierz} oraz \textbf{string}.
 
 \subsubsection{Skalar}
 
@@ -93,7 +106,7 @@ Skalarem jest liczba, zapis której opisany diagramem poniżej:
 \begin{rail}
 
 scalarNoExp : '-' ? ('0' | (digit[1-9] (digit +))) ('.' (digit +))? ;
-scalar : ''[scalarNoExp] (('e' | 'E') ('-' | '+') (digit+))?
+scalar : ''[scalarNoExp] (('e' | 'E') ('-' | '+')? (digit+))?
 
 \end{rail}
 
@@ -104,7 +117,7 @@ Przykłady:
 
 \pagebreak
 \subsubsection{String}
-String jest to łańcuch symboli. Diagram:
+String jest to łańcuch symboli poprzedzony i zakończony znakiem \textbf{"}. 
 
 \hspace*{-2cm}\vbox
 {
@@ -127,22 +140,13 @@ Przykłady:
 \end{itemize}
 
 \subsubsection{Macierz}
-Macierz jest tablicą dwuwymiarową, która może zawierać skalary, stringi, wartości \textbf{null}, lub inne macierzy. Dla wygody skorzystamy z pojęć \textbf{whitespace} oraz \textbf{expression} (opisane w rozdziale \emph{Wyrażenia i operatory}).
+Macierz jest tablicą dwuwymiarową, która może zawierać skalary, stringi, wartości \textbf{null}, lub inne macierzy. Dla wygody skorzystamy z pojęcia \textbf{expression} (opisane w rozdziale \emph{Wyrażenia i operatory}).
 
 \begin{rail}
-  whitespace : (([space]'' | [linefeed]'' | [horizontal tab]'')+)?;
+
+  matrix : '[' ((expression + (',' | ';'))?) ']';
   
 \end{rail}
-
-\hspace*{-3cm}\scalebox{0.9}{
-  \vbox{
-    \begin{rail}
-
-      matrix : '[' (((whitespace+)?) | ((whitespace+)? expression (whitespace+)? + (',' | ';'))) ']';
-  
-    \end{rail}
-  }
-}
 
 \bigskip
 Znak \textbf{,} jest używany dla separacji kolejnych elementów w jednym wierszu macierzy. Znak \textbf{;} jest używany dla separacji kolejnych wierszów. Wiersz macierzy nie może być pusty, chyba, że cała macierz jest pusta. Liczba elementów w każdym wierszu macierzy musi być taka sama.
@@ -159,14 +163,53 @@ Przykłady:
 \item {[1, 2, 3; 4, 5, 6; 7, 8, 9]}
 
 \item {[\\
-        1, 2;\\
-        3, 4;\\
-        5, 6\\
-       ]}
+        1, 2, 3, 4;\\
+        5, 6, 7, 8  ]}
        
 \item {["String", identifier; 1.0e-0, [ ] ]}
 
 \end{itemize}
+
+\subsubsection{Indeksowanie}
+
+Odwołanie się do elementów macierzy bądź stringa jest możliwe dzięki operatorowi \textbf{[ ]}. Do elementu macierzy można dostać się za pomocą dwóch indeksów odseparowanych przecinkiem: pierwszy specyfikuje wiersz macierzy, drugi -- kolumnę. W przypadku pominięcia jednego z indeksów z zachowaniem separatora zostanie zwrócona cała kolumna/wiersz jako nowa macierz. Indeks jest liczbą całkowitą. W przypadku ujemnego indeksu zostanie zwrócony element licząc od końca.
+
+\medskip
+Przykłady:
+
+\begin{lstlisting}
+m = [1, 2, 3;
+     4, 5, 6]
+     
+m[0, 1] # 2
+
+m[, 1] # [2, 5]
+
+m[1,] # [4, 5, 6]
+\end{lstlisting}
+
+W przypadku podania tylko jednego indeksu bez separatora zostanie zwrócony element z wypłaszczonej macierzy. Indeksowanie stringa jest analogiczne do indeksowania w Pythonie.
+
+\begin{lstlisting}
+s = "Hello world!"
+
+s[4] # o
+
+m = [1, 2, 3, 4; 5, 6, 7, 8]
+
+m[5] # 6
+\end{lstlisting}
+
+
+\subsubsection{Wartość}
+
+Wartość (\emph{Value}) jest pewną stałą używaną w wyrażeniach. Może to być skalar, macierz, string lub wartość \textbf{null}.
+
+\begin{rail}
+
+  value : scalar | string | matrix | null
+
+\end{rail}
 
 \subsection{Wyrażenia i operatory}
 
@@ -200,13 +243,17 @@ Język FML ma operatory \textbf{arytmetyczne} oraz \textbf{logiczne}.
 
 Należy zwrócić uwagę na to, że operatory unarne \textbf{-} i \textbf{not} mają łączność lewostronną, zaś operatory \textbf{!} i \textbf{!!} -- prawostronną.
 
+Operatory wywołania funkcji \textbf{( )} i indeksowania macierzy \textbf{[ ]} zostały opisane w rozdziałach \emph{Funkcje} i \emph{Pętle} odpowiednio. 
+
 \subsubsection{Wyrażenia}
 
-Wyrażenie może być pojedynczą zmienną, lub też pewną operacją na zmiennych. Dla ustalenia kolejności operacji mogą być stosowane nawiasy okrągłe: \textbf{(} i \textbf{)}. Wyrażenie nie może być puste, nie może zawierać samych nawiasów.
+Wyrażenie może być pojedynczą zmienną, lub też pewną operacją na zmiennych. Dla ustalenia kolejności operacji mogą być stosowane nawiasy okrągłe: \textbf{(} i \textbf{)}
+\footnote{Priorytety operatorów i kolejność wykonywanych wyrażeń jest opisana w jednym z następnych rozdziałów.}
+. Wyrażenie nie może być puste, nie może zawierać samych nawiasów.
 
 \begin{rail}
 
-expression : (identifier | value) | ('left unary operator' expression ) | (expression 'right unary operator') | (expression 'binary operator' expression) | (expression '?' expression ':' expression) | ('('?(expression)')'? )
+expression : (identifier | value) | ('left unary operator' expression ) | (expression 'right unary operator') | (expression 'binary operator' expression) | (expression '?' expression ':' expression) | ('(' expression ')')
 
 \end{rail}
 
@@ -215,25 +262,196 @@ expression : (identifier | value) | ('left unary operator' expression ) | (expre
 Przypisanie jest dokonywane za pomocą operatora przypisania \textbf{=}. 
 
 \begin{rail}
-
-assignment : identifier '=' expression
-
+  assignment : identifier '=' expression
 \end{rail}
 
-\subsection{Pętle, funkcje, konstrukcje warunkowe}
+\subsection{Konstrukcje warunkowe, funkcje, pętle}
 
-\subsubsection{Instrukcja}
+\subsubsection{Instrukcja i zbiór instrukcji}
 
 Podstawowa operacja w pętlach, funkcjach itd.
-Każda instrukcja musi być zakończona znakiem średnikiem. Na diagramie poniżej pojawia się pojęcie funcji, są opisane w podrozdziale poniżej.
 
 \begin{rail}
-      instruction : (assignment | expression | 'function call') ';';
-      statement : instruction | ( '<' (instruction +)  '>' );
+  instruction : ((assignment | expression ) ';') | ('while loop' | 'do while loop' | 'if   statement' | 'function declaration' )
+\end{rail}
+
+Każda instrukcja musi być zakończona średnikiem, chyba że jest to pętla, kontrukcja warunkowa lub deklaracja funkcji.
+
+
+Zbiór instrukcji (\emph{statement}) jest to co najmniej jedna instrukcja. W przypadku więcej niż jednej instrukcji otacza je nawiasami klamrowymi \textbf{$\{\}$}\footnote{Uwaga: zamiast \textbf{$< >$} na diagramie powinne stać znaki \textbf{$\{ \}$}. Latexowi z niewiadomego mi powodu nie podoba się wykorzystanie nawiasów klamrowych w diagramach.}.
+
+\begin{rail}
+  statement : instruction | ( '<' (instruction +) '>' );
+\end{rail}
+
+
+
+\subsubsection{Wyrażenia logiczne}
+
+Zanim przejść do konstrukcji warunkowych trzeba zdefiniować jaką wartość może przyjmować wyrażenie logiczne.
+
+Wyrażenie logiczne jest \textbf{fałszywe} gdy jest równe jednej z poniższych wartości:
+
+\begin{itemize}
+
+  \item Skalar zerowy \textbf{0}.
+  \item Pusty string \textbf{""}.
+  \item Pusta macierz \textbf{[ ]}.
+  \item Wartość \textbf{null}.
+
+\end{itemize}
+
+W pozostałych przypadkach wyrażenie logiczne będzie \textbf{prawdziwe}.
+
+\pagebreak
+
+\subsubsection{Konstrukcje warunkowe}
+
+Do konstrukcji warunkowych używane są słowa kluczowe \textbf{if} oraz \textbf{else}. Diagramy poniżej opisują poprawny syntaksycznie zapis.
+
+\hspace*{-0.8cm}\scalebox{0.9}{
+\vbox{
+  \begin{rail}
+    conditionalStatement : if '(' (assignment | expression) ')' statement ( else statement )?;
+
+  \end{rail}
+  }
+}
+
+Przykłady:
+\lstset{language=Python}
+\begin{lstlisting}
+if (a<b) a=b;
+else {
+  a = a - 10;
+  b = b * 2;
+}
+
+if (a)
+  if (b) {
+    b = c+d;
+  }
+  else
+    a = c+d;
+    
+if (a) {
+  if (b)
+    b = b + 10;
+} else { 
+  a = a + 10;
+}
+
+\end{lstlisting}
+
+\pagebreak
+
+\subsubsection{Funkcje}
+
+Deklaracja funkcji rozpoczyna się od słowa kluczowego \textbf{fun}.
+Po nim następuje identyfikator funkcji. Parametry funkcji należy opisać w nawiasach jako identyfikatory odseparowane przecinkiem. Nawiasy puste oznaczają brak parametrów. Na koniec jest ciało funkcji. To wszystko jest zilustrowane na diagramie poniżej.
+
+\begin{rail}
+
+functionDeclaration : fun identifier '(' (identifier + ',')? ')' statement;
 
 \end{rail}
 
-\footnote{Uwaga: zamiast \textbf{$< >$} powinne stać znaki \textbf{$\{ \}$}. Latexu z niewiadomego mi powodu nie podoba się użycie klamrowych nawiasów.}
+Przykład:
+
+\begin{lstlisting}
+fun my_function(parametr)
+  a = parametr;
+  
+\end{lstlisting}
+
+Aby zwrócić wartość przez funkcję należy użyć słowa kluczowego \textbf{ret}. Domyślną wartością zwracaną przez funkcje jest \textbf{null}.
+
+\medskip
+Przykład:
+
+\begin{lstlisting}
+fun my_function(parameter)
+  ret parameter + 1;
+
+\end{lstlisting}
+
+Aby wywołać istniejącą funkcje należy podać jej identyfikator podając argumenty w nawiasach okrągłych.
+
+\medskip
+Przykład:
+
+\begin{lstlisting}
+my_function()
+my_function(1)
+my_function(a, b)
+\end{lstlisting}
+
+\textbf{Funkcje wbudowane}
+
+\medskip
+Do wbudowanych należa funkcje:
+
+\begin{itemize}
+
+  \item abs() -- zwraca wartość bezwzględną argumentu,
+  \item len() -- zwraca długość (liczbę elementów) objektu,
+  \item max() -- zwraca największą liczbę z podanej sekwencji,
+  \item min() -- zwraca najmniejszą liczbę z podanej sekwencji,
+  \item print() -- wypisuje na konsole podane argumenty,
+  \item round() -- zwraca zaokrąglony skalar,
+  \item shape() -- zwraca macierz zawierającą wymiary podanego argumentu,
+  \item transp() -- odwraca podaną macierz.
+  
+\end{itemize}
+
+\subsubsection{Pętle}
+
+W FML wyróżnia się 3 typy pętli: \textbf{for loop}, \textbf{while loop}, \textbf{do while loop}.
+
+\medskip
+
+Pętle \textbf{for loop} przeznaczone do iterowania po macierzy lub stringu. Do tego używa się słowa kluczowego \textbf{in}, który rozwija iterowalny zbiór.
+
+\medskip
+Przykład wyliczenia sumy wszystkich elementów macierzy:
+
+\begin{lstlisting}
+m = [1, 2; 3.5, 4.5]
+s = 0.0
+for (i in m) {
+  s = s + i;
+}
+\end{lstlisting}
+
+Pętla mogła również zostać zapisana w sposób następujący:
+\begin{lstlisting}
+...
+for (i in m)
+  s = s + i;
+\end{lstlisting}
+
+W pętlach \textbf{while} instrukcje są wykonywane póki jest spełniony warunek. W przypadku \textbf{do while loop} zawartość pętli uruchomi się co najmniej raz niezależnie od tego czy spełniony warunek pętli. Składnia jest analogiczna do języka \textbf{C}.
+
+\medskip
+Przykłady wypisania liczb od 1 do 10:
+
+\begin{lstlisting}
+
+i = 1
+while (i <= 10) {
+  print(i);
+  i = i + 1;
+}
+
+i = 1;
+do {
+  print(i);
+  i = i + 1;
+} while (i <= 10);
+
+\end{lstlisting}
+
+
 
 
 \end{document}
