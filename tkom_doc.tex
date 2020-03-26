@@ -186,28 +186,26 @@ Operatory są przedstawione w tabeli poniżej.
   \centering
   \begin{tabular}{ |c|c|c|c| }
     \hline
-    \textbf{Priorytet} & \textbf{Operator} & \textbf{Opis} & \textbf{Łączność} \\ [0.5ex] 
+    \textbf{Priorytet} & \textbf{Operator} & \textbf{Opis} \\ [0.5ex] 
     \hline
-    \multirow{3}{*}{1} & ( ) & Wywołanie funkcji & \multirow{3}{*}{Prawostronna} \\
-                       & [ ] & Indeksowanie macierzy &  \\
-                       & ** & Potęgowanie & \\
+    1 & ** & Potęgowanie \\
     \hline
-    \multirow{2}{*}{2} & + - & Jednoargumentowy plus i minus & \multirow{2}{*}{Lewostronna} \\
-                       & not & Logiczne zaprzeczenie & \\
+    \multirow{2}{*}{2} & + - & Jednoargumentowy plus i minus \\
+                       & not & Logiczne zaprzeczenie  \\
     \hline
-    \multirow{2}{*}{3} & * / mod & Mnożenie, dzielenie oraz modulo & \multirow{7}{*}{Prawostronna} \\
-                       & div & Dzielenie całkowitoliczbowe & \\
-    \cline{1-3}
-    4 & + - & Dodawanie, odejmowanie & \\ 
-    \cline{1-3}
-    \multirow{2}{*}{5} & $<$ $<=$ & Operatory $<$ oraz $\leq$ & \\
-                       & $>$ $>=$ & Operatory $>$ oraz $\geq$ & \\
-    \cline{1-3}
-    6 & == != & Operatory $=$ oraz $\neq$ & \\
-    \cline{1-3}
-    7 & and or & Logiczny iloczyn i suma & \\
+    \multirow{2}{*}{3} & * / mod & Mnożenie, dzielenie oraz modulo \\
+                       & div & Dzielenie całkowitoliczbowe \\
     \hline
-    8 & = & Przypisanie & Lewostronna \\
+    4 & + - & Dodawanie, odejmowanie \\ 
+    \hline
+    \multirow{2}{*}{5} & $<$ $<=$ & Operatory $<$ oraz $\leq$ \\
+                       & $>$ $>=$ & Operatory $>$ oraz $\geq$ \\
+    \hline
+    6 & == != & Operatory $=$ oraz $\neq$ \\
+    \hline
+    7 & and or & Logiczny iloczyn i suma \\
+    \hline
+    8 & = & Przypisanie \\
     \hline
   \end{tabular}
 \end{table}
@@ -397,11 +395,11 @@ statement : (((('ret')? expression) | 'do while loop') ';') | 'while loop' | 'fo
 \end{rail}
 
 \begin{rail}
-doWhileLoop : 'do' statement '(' expression ')'
+doWhileLoop : 'do' statement '(' logicalExpression ')'
 \end{rail}
 
 \begin{rail}
-whileLoop : while '(' expression ')' statement
+whileLoop : while '(' logicalExpression ')' statement
 \end{rail}
 
 \begin{rail}
@@ -409,7 +407,7 @@ forLoop : 'for' '(' identifier 'in' (identifier | matrix | string) ')' statement
 \end{rail}
 
 \begin{rail}
-ifStatement : 'if' '(' expression ')' statement ('else' statement)?
+ifStatement : 'if' '(' logicalExpression ')' statement ('else' statement)?
 \end{rail}
 
 \begin{rail}
@@ -421,7 +419,11 @@ assignment : identifier '=' (logicalExpression | string)
 \end{rail}
 
 \begin{rail}
-logicalExpression : equalityExpression (('and' | 'or')  equalityExpression)?
+logicalExpression : logicalSubExpression ('or'  logicalSubExpression)?
+\end{rail}
+
+\begin{rail}
+logicalSubExpression : equalityExpression ('and'  equalityExpression)?
 \end{rail}
 
 \begin{rail}
@@ -437,7 +439,7 @@ simpleExpression : term (('+' | '-') term)?
 \end{rail}
 
 \begin{rail}
-term : miniterm ((('*' | '/') miniterm) | (('div' | 'mod' ) integer))?
+term : miniterm ((('*' | '/') miniterm) | (('div' | 'mod' ) miniterm))?
 \end{rail}
 
 \begin{rail}
@@ -445,19 +447,19 @@ miniterm : ('+' | '-' | not)? microterm
 \end{rail}
 
 \begin{rail}
-microterm : factor | identifier functionCall | identifier arraySubscripting | factor '**' factor
+microterm : factor | factor '**' factor
 \end{rail}
 
 \begin{rail}
-functionCall : '(' (expression + ',')? ')'
+factor : identifier | constant | functionCall | arraySubscripting |'(' expression ')'
 \end{rail}
 
 \begin{rail}
-arraySubscripting : '[' (integer | ((integer|':') ',' (integer|':'))) ']'
+functionCall : identifier '(' (expression + ',')? ')'
 \end{rail}
 
 \begin{rail}
-factor : identifier | constant | '(' expression ')'
+arraySubscripting : identifier '[' (expression | ((expression|':') ',' (expression|':'))) ']'
 \end{rail}
 
 \begin{rail}
@@ -475,7 +477,11 @@ integer : '-' ? ('0' | (digit[1-9] (digit +)));
 \end{rail}
 
 \begin{rail}
-matrix : '[' ((expression + (',' | ';'))?) ']';
+matrix : '[' ((row + ';')?) ']';
+\end{rail}
+
+\begin{rail}
+row : expression + ',';
 \end{rail}
 
 \hspace*{-2cm}\vbox
