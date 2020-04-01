@@ -1,15 +1,64 @@
-class TokenTypes:
-    SEMI = 'SEMI'
+from enum import Enum
+
+
+class TokenType(Enum):
+    # 13 reserved keywords
+    AND = 'and'
+    INTEGER_DIV = 'div'
+    DO = 'do'
+    ELSE = 'else'
+    FOR = 'for'
+    FUN = 'fun'
+    IF = 'if'
+    IN = 'in'
+    MODULO = 'mod'
+    NOT = 'not'
+    OR = 'or'
+    RETURN = 'ret'
+    WHILE = 'while'
+
+    # single-character token types
+    SEMI = ';'
+    PLUS = 'PLUS'
+    MINUS = 'MINUS'
+    MUL = '*'
+    FLOAT_DIV = '/'
+    ASSIGN = '='
+    LPAREN = '('
+    RPAREN = ')'
+    LESS = '<'
+    GRE = '>'
+
+    # other types
+    LEQ = '<='
+    GEQ = '>='
+    EQ = '=='
+    NEQ = '!='
+    POW = 'POW'
     SCALAR = 'SCALAR'
     STRING = 'STRING'
     MATRIX = 'MATRIX'
-    POW = 'POW'
-    PLUS = 'PLUS'
-    MINUS = 'MINUS'
-    LPAREN = '('
-    RPAREN = ')'
     ID = 'ID'
     EOF = 'EOF'
+
+
+def _build_reserved_keywords():
+    """
+    Build a dictionary of reserved keywords.
+    Function takes advantage of fact that
+    first 13 fields of class TokenTyp are reserved keywords.
+    :return:
+    """
+
+    token_types_list = list(TokenType)
+    reserved_keywords = {
+        token_type.value: token_type
+        for token_type in token_types_list[:13]
+    }
+    return reserved_keywords
+
+
+RESERVED_KEYWORDS = _build_reserved_keywords()
 
 
 class Token:
@@ -33,20 +82,3 @@ class Token:
 
     def __repr__(self):
         return self.__str__()
-
-
-RESERVED_KEYWORDS = {
-    'and': Token('and', 'and'),
-    'div': Token('div', 'div'),
-    'do': Token('do', 'do'),
-    'else': Token('else', 'else'),
-    'for': Token('for', 'for'),
-    'fun': Token('fun', 'fun'),
-    'if': Token('if', 'if'),
-    'in': Token('in', 'in'),
-    'mod': Token('mod', 'mod'),
-    'not': Token('not', 'not'),
-    'or': Token('or', 'or'),
-    'ret': Token('ret', 'ret'),
-    'while': Token('while', 'while'),
-}
