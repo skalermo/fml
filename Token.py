@@ -62,9 +62,11 @@ RESERVED_KEYWORDS = _build_reserved_keywords()
 
 
 class Token:
-    def __init__(self, type, value):
+    def __init__(self, type, value, line=None, column=None):
         self.type = type
         self.value = value
+        self.line = line
+        self.column = column
 
     def __str__(self):
         """
@@ -75,9 +77,11 @@ class Token:
             Token(PLUS, '+')
             Token(MUL, '*')
         """
-        return 'Token({type}, {value})'.format(
+        return 'Token({type}, {value}, position=[{line}:{column}])'.format(
             type=self.type,
-            value=repr(self.value)
+            value=repr(self.value),
+            line=self.line,
+            column=self.column
         )
 
     def __repr__(self):

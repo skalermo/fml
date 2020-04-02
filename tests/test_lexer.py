@@ -1,6 +1,6 @@
 import unittest
 from Lexer import Lexer
-from Token import TokenTypes
+from Token import TokenType
 
 
 class LexerTest(unittest.TestCase):
@@ -9,7 +9,7 @@ class LexerTest(unittest.TestCase):
             lexer = Lexer(file.read())
 
         current_token = lexer.get_next_token()
-        while current_token.type != TokenTypes.EOF:
+        while current_token.type != TokenType.EOF:
             print(current_token)
             current_token = lexer.get_next_token()
 
