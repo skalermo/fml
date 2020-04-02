@@ -19,8 +19,8 @@ class TokenType(Enum):
 
     # single-character token types
     SEMI = ';'
-    PLUS = 'PLUS'
-    MINUS = 'MINUS'
+    PLUS = '+'
+    MINUS = '-'
     MUL = '*'
     FLOAT_DIV = '/'
     ASSIGN = '='
@@ -34,7 +34,7 @@ class TokenType(Enum):
     GEQ = '>='
     EQ = '=='
     NEQ = '!='
-    POW = 'POW'
+    POW = '**'
     SCALAR = 'SCALAR'
     STRING = 'STRING'
     MATRIX = 'MATRIX'
