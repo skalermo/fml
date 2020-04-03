@@ -1,6 +1,7 @@
 import unittest
 from Lexer import Lexer
 from Token import TokenType
+from Error import LexerError
 
 
 class LexerTest(unittest.TestCase):
@@ -12,6 +13,10 @@ class LexerTest(unittest.TestCase):
         while current_token.type != TokenType.EOF:
             print(current_token)
             current_token = lexer.get_next_token()
+
+        # lexer = Lexer('3.')
+        # with self.assertRaises(LexerError) as context:
+        #     lexer.get_next_token()
 
 
 if __name__ == '__main__':

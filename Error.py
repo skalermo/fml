@@ -1,7 +1,7 @@
-from enum import Enum
+import sys
 
 
-class ErrorCode(Enum):
+class ErrorCode:
     UNEXPECTED_TOKEN = 'Unexpected token'
     ID_NOT_FOUND = 'Identifier not found'
     DUPLICATE_ID = 'Duplicate id found'
@@ -9,10 +9,10 @@ class ErrorCode(Enum):
 
 class Error(Exception):
     def __init__(self, error_code=None, token=None, message=None):
-        self.error_code = error_code
-        self.token = token
-        # add exception class name before the message
-        self.message = f'{self.__class__.__name__}: {message}'
+        # Hide exception traceback
+        sys.tracebacklimit = 0
+
+        super().__init__(message)
 
 
 class LexerError(Error):
