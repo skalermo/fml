@@ -111,6 +111,22 @@ class Lexer:
             token.value = result
         return token
 
+    def string(self):
+        result = ''
+
+        while self.current_char != '"':
+            # if current char is '\'
+            if self.current_char == '\\' and self.peek() == '"':
+                result += '"'
+                self.next()
+                self.next()
+            else:
+                result += self.current_char
+                self.next()
+
+        self.next()
+        return result
+
     def get_next_token(self):
         while self.current_char is not None:
 
@@ -159,6 +175,10 @@ class Lexer:
             if self.current_char == '=':
                 self.next()
                 return Token(TokenType.EQ, '=', self.line, self.column)
+
+            if self.current_char == '"':
+                self.next()
+                return Token(TokenType.STRING, self.string(), self.line, self.column)
 
             self.error()
 
