@@ -1,5 +1,5 @@
 from Token import TokenType, Token, RESERVED_KEYWORDS
-from Error import LexerError
+from Error import LexerError, ErrorCode
 
 
 class Lexer:
@@ -11,13 +11,13 @@ class Lexer:
         self.line = 1
         self.column = 1
 
-    def error(self):
-        s = "Lexer error on '{lexeme}' line: {line} column: {column}".format(
+    def error(self, error_code=None):
+        s = "'{lexeme}' line: {line} column: {column}".format(
             lexeme=self.current_char,
             line=self.line,
             column=self.column,
         )
-        raise LexerError(message=s)
+        raise LexerError(error_code=error_code, message=s)
 
     def peek(self):
         peek_pos = self.pos + 1
@@ -57,20 +57,61 @@ class Lexer:
             result += self.current_char
             self.next()
 
-        return int(result)
+        # Handle decimal part of scalar
+        if self.current_char == '.':
+            result += self.current_char
+            peeked_char = self.peek()
+            if peeked_char is not None and peeked_char.isdigit():
+                self.next()
+                while self.current_char is not None and self.current_char.isdigit():
+                    result += self.current_char
+                    self.next()
+
+                # Handle scientific notation
+                if self.current_char == 'e' or self.current_char == 'E':
+                    result += self.current_char
+                    peeked_char = self.peek()
+                    if peeked_char == '-' or peeked_char == '+':
+                        self.next()
+                        result += self.current_char
+                    peeked_char = self.peek()
+                    if peeked_char is not None and peeked_char.isdigit():
+                        self.next()
+                        while self.current_char is not None and self.current_char.isdigit():
+                            result += self.current_char
+                            self.next()
+                    else:
+                        self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+            else:
+                self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+
+        return float(result)
 
     def id(self):
-        """Handle identifiers and reserved keywords"""
+        # Create a new token with current line and column number
+        token = Token(type=None, value=None, line=self.line, column=self.column)
+
         result = ''
-        while self.current_char is not None and self.current_char.isalnum():
+        if self.current_char is not None and self.current_char.isalnum():
+            result += self.current_char
+            self.next()
+        while self.current_char is not None \
+                and (self.current_char.isalnum() or self.current_char == '_'):
             result += self.current_char
             self.next()
 
-        token = RESERVED_KEYWORDS.get(result, Token(TokenType.ID, result, self.line, self.column))
+        token_type = RESERVED_KEYWORDS.get(result)
+        if token_type is None:
+            # identifier
+            token.type = TokenType.ID
+            token.value = result
+        else:
+            # reserved keyword
+            token.type = token_type
+            token.value = result
         return token
 
     def get_next_token(self):
-
         while self.current_char is not None:
 
             if self.current_char.isspace():
@@ -87,6 +128,9 @@ class Lexer:
 
             if self.current_char.isdigit():
                 return Token(TokenType.SCALAR, self.scalar(), self.line, self.column)
+
+            if self.current_char.isalnum():
+                return self.id()
 
             if self.current_char == '+':
                 self.next()
@@ -111,6 +155,10 @@ class Lexer:
             if self.current_char == ')':
                 self.next()
                 return Token(TokenType.RPAREN, ')', self.line, self.column)
+
+            if self.current_char == '=':
+                self.next()
+                return Token(TokenType.EQ, '=', self.line, self.column)
 
             self.error()
 
