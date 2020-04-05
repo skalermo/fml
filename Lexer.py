@@ -3,83 +3,58 @@ from Error import LexerError, ErrorCode
 
 
 class Lexer:
-    def __init__(self, text):
-        self.text = text
-        # self.pos is an index into self.text
-        self.pos = 0
-        self.current_char = self.text[self.pos]
-        self.line = 1
-        self.column = 1
+    def __init__(self, source):
+        self.source = source
+        self.current_token = self.get_next_token()
 
     def error(self, error_code=None):
         s = "'{lexeme}' line: {line} column: {column}".format(
-            lexeme=self.current_char,
-            line=self.line,
-            column=self.column,
+            lexeme=self.source.source.current_char,
+            line=self.source.line,
+            column=self.source.column,
         )
         raise LexerError(error_code=error_code, message=s)
 
-    def peek(self):
-        peek_pos = self.pos + 1
-        if peek_pos > len(self.text) - 1:
-            return None
-        else:
-            return self.text[peek_pos]
-
-    def next(self):
-        # Move to the next character
-        # Set current_char
-        if self.current_char == '\n':
-            self.line += 1
-            self.column = 0
-
-        self.pos += 1
-        if self.pos > len(self.text) - 1:
-            self.current_char = None  # Reached end of the input
-        else:
-            self.current_char = self.text[self.pos]
-            self.column += 1
-
     def skip_whitespace(self):
-        while self.current_char is not None and self.current_char.isspace():
-            self.next()
+        while self.source.current_char is not None and self.source.current_char.isspace():
+            self.source.move_to_next_char()
 
     def skip_comment(self):
-        while self.current_char != '\n':
-            self.next()
-        self.next()
+        while self.source.current_char != '\n':
+            self.source.move_to_next_char()
+        self.source.move_to_next_char()
 
     def scalar(self):
         result = ''
 
         # Handle integer part of scalar
-        while self.current_char is not None and self.current_char.isdigit():
-            result += self.current_char
-            self.next()
+        while self.source.current_char is not None and self.source.current_char.isdigit():
+            result += self.source.current_char
+            self.source.move_to_next_char()
 
         # Handle decimal part of scalar
-        if self.current_char == '.':
-            result += self.current_char
+        if self.source.current_char == '.':
+            result += self.source.current_char
             peeked_char = self.peek()
             if peeked_char is not None and peeked_char.isdigit():
-                self.next()
-                while self.current_char is not None and self.current_char.isdigit():
-                    result += self.current_char
-                    self.next()
+                self.source.move_to_next_char()
+                while self.source.current_char is not None and self.source.current_char.isdigit():
+                    result += self.source.current_char
+                    self.source.move_to_next_char()
 
                 # Handle scientific notation
-                if self.current_char == 'e' or self.current_char == 'E':
-                    result += self.current_char
+                if self.source.current_char == 'e' or self.source.current_char == 'E':
+                    result += self.source.current_char
                     peeked_char = self.peek()
                     if peeked_char == '-' or peeked_char == '+':
-                        self.next()
-                        result += self.current_char
+                        self.source.move_to_next_char()
+                        result += self.source.current_char
                     peeked_char = self.peek()
                     if peeked_char is not None and peeked_char.isdigit():
-                        self.next()
-                        while self.current_char is not None and self.current_char.isdigit():
-                            result += self.current_char
-                            self.next()
+                        self.source.move_to_next_char()
+                        while self.source.current_char is not None and self.source.current_char.isdigit():
+                            result += self.source.current_char
+                            self.source.move_to_next_char()
                     else:
                         self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
             else:
@@ -89,16 +64,16 @@ class Lexer:
 
     def id(self):
         # Create a new token with current line and column number
-        token = Token(type=None, value=None, line=self.line, column=self.column)
+        token = Token(type=None, value=None, line=self.source.line, column=self.source.column)
 
         result = ''
-        if self.current_char is not None and self.current_char.isalnum():
-            result += self.current_char
-            self.next()
-        while self.current_char is not None \
-                and (self.current_char.isalnum() or self.current_char == '_'):
-            result += self.current_char
-            self.next()
+        if self.source.current_char is not None and self.source.current_char.isalnum():
+            result += self.source.current_char
+            self.source.move_to_next_char()
+        while self.source.current_char is not None \
+                and (self.source.current_char.isalnum() or self.source.current_char == '_'):
+            result += self.source.current_char
+            self.source.move_to_next_char()
 
         token_type = RESERVED_KEYWORDS.get(result)
         if token_type is None:
@@ -114,71 +89,71 @@ class Lexer:
     def string(self):
         result = ''
 
-        while self.current_char != '"':
+        while self.source.current_char != '"':
             # if current char is '\'
-            if self.current_char == '\\' and self.peek() == '"':
+            if self.source.current_char == '\\' and self.peek() == '"':
                 result += '"'
-                self.next()
-                self.next()
+                self.source.move_to_next_char()
+                self.source.move_to_next_char()
             else:
-                result += self.current_char
-                self.next()
+                result += self.source.current_char
+                self.source.move_to_next_char()
 
-        self.next()
+        self.source.move_to_next_char()
         return result
 
     def get_next_token(self):
-        while self.current_char is not None:
+        while self.source.current_char is not None:
 
-            if self.current_char.isspace():
+            if self.source.current_char.isspace():
                 self.skip_whitespace()
                 continue
 
-            if self.current_char == '#':
+            if self.source.current_char == '#':
                 self.skip_comment()
                 continue
 
-            if self.current_char == ';':
-                self.next()
-                return Token(TokenType.SEMI, ';', self.line, self.column)
+            if self.source.current_char == ';':
+                self.source.move_to_next_char()
+                return Token(TokenType.SEMI, ';', self.source.line, self.source.column)
 
-            if self.current_char.isdigit():
-                return Token(TokenType.SCALAR, self.scalar(), self.line, self.column)
+            if self.source.current_char.isdigit():
+                return Token(TokenType.SCALAR, self.scalar(), self.source.line, self.source.column)
 
-            if self.current_char.isalnum():
+            if self.source.current_char.isalnum():
                 return self.id()
 
-            if self.current_char == '+':
-                self.next()
-                return Token(TokenType.PLUS, '+', self.line, self.column)
+            if self.source.current_char == '+':
+                self.source.move_to_next_char()
+                return Token(TokenType.PLUS, '+', self.source.line, self.source.column)
 
-            if self.current_char == '-':
-                self.next()
-                return Token(TokenType.MINUS, '-', self.line, self.column)
+            if self.source.current_char == '-':
+                self.source.move_to_next_char()
+                return Token(TokenType.MINUS, '-', self.source.line, self.source.column)
 
-            if self.current_char == '*':
-                self.next()
-                return Token(TokenType.MUL, '*', self.line, self.column)
+            if self.source.current_char == '*':
+                self.source.move_to_next_char()
+                return Token(TokenType.MUL, '*', self.source.line, self.source.column)
 
-            if self.current_char == '/':
-                self.next()
-                return Token(TokenType.DIV, '/', self.line, self.column)
+            if self.source.current_char == '/':
+                self.source.move_to_next_char()
+                return Token(TokenType.FLOAT_DIV, '/', self.source.line, self.source.column)
 
-            if self.current_char == '(':
-                self.next()
-                return Token(TokenType.LPAREN, '(', self.line, self.column)
+            if self.source.current_char == '(':
+                self.source.move_to_next_char()
+                return Token(TokenType.LPAREN, '(', self.source.line, self.source.column)
 
-            if self.current_char == ')':
-                self.next()
-                return Token(TokenType.RPAREN, ')', self.line, self.column)
+            if self.source.current_char == ')':
+                self.source.move_to_next_char()
+                return Token(TokenType.RPAREN, ')', self.source.line, self.source.column)
 
-            if self.current_char == '=':
-                self.next()
-                return Token(TokenType.EQ, '=', self.line, self.column)
+            if self.source.current_char == '=':
+                self.source.move_to_next_char()
+                return Token(TokenType.EQ, '=', self.source.line, self.source.column)
 
-            if self.current_char == '"':
-                self.next()
-                return Token(TokenType.STRING, self.string(), self.line, self.column)
+            if self.source.current_char == '"':
+                self.source.move_to_next_char()
+                return Token(TokenType.STRING, self.string(), self.source.line, self.source.column)
 
             self.error()
 
