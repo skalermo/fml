@@ -9,20 +9,26 @@ class Lexer:
 
     def error(self, error_code=None):
         s = "'{lexeme}' line: {line} column: {column}".format(
-            lexeme=self.source.source.current_char,
+            lexeme=self.source.current_char,
             line=self.source.line,
             column=self.source.column,
         )
         raise LexerError(error_code=error_code, message=s)
 
     def skip_whitespace(self):
-        while self.source.current_char is not None and self.source.current_char.isspace():
+        skipped = 0
+        while self.source.current_char.isspace():
             self.source.move_to_next_char()
+            skipped += 1
+        return skipped
 
     def skip_comment(self):
-        while self.source.current_char != '\n':
+        if self.source.current_char == '#':
+            while self.source.current_char != '\n':
+                self.source.move_to_next_char()
             self.source.move_to_next_char()
-        self.source.move_to_next_char()
+            return True
+        return False
 
     def scalar(self):
         result = ''
@@ -35,8 +41,8 @@ class Lexer:
         # Handle decimal part of scalar
         if self.source.current_char == '.':
             result += self.source.current_char
-            peeked_char = self.peek()
-            if peeked_char is not None and peeked_char.isdigit():
+            self.source.move_to_next_char()
+            if self.source.current_char is not None and self.source.current_char.isdigit():
                 self.source.move_to_next_char()
                 while self.source.current_char is not None and self.source.current_char.isdigit():
                     result += self.source.current_char
@@ -45,12 +51,10 @@ class Lexer:
                 # Handle scientific notation
                 if self.source.current_char == 'e' or self.source.current_char == 'E':
                     result += self.source.current_char
-                    peeked_char = self.peek()
-                    if peeked_char == '-' or peeked_char == '+':
+                    if self.source.current_char == '-' or self.source.current_char == '+':
                         self.source.move_to_next_char()
                         result += self.source.current_char
-                    peeked_char = self.peek()
-                    if peeked_char is not None and peeked_char.isdigit():
+                    if self.source.current_char is not None and self.source.current_char.isdigit():
                         self.source.move_to_next_char()
                         while self.source.current_char is not None and self.source.current_char.isdigit():
                             result += self.source.current_char
@@ -103,58 +107,35 @@ class Lexer:
         return result
 
     def get_next_token(self):
-        while self.source.current_char is not None:
+        while self.skip_comment() or self.skip_whitespace():
+            pass
 
-            if self.source.current_char.isspace():
-                self.skip_whitespace()
-                continue
+        if self.source.current_char.isdigit():
+            return Token(TokenType.SCALAR, self.scalar(), self.source.line, self.source.column)
 
-            if self.source.current_char == '#':
-                self.skip_comment()
-                continue
+        if self.source.current_char.isalnum():
+            return self.id()
 
-            if self.source.current_char == ';':
-                self.source.move_to_next_char()
-                return Token(TokenType.SEMI, ';', self.source.line, self.source.column)
+        if self.source.current_char == '"':
+            self.source.move_to_next_char()
+            return Token(TokenType.STRING, self.string(), self.source.line, self.source.column)
 
-            if self.source.current_char.isdigit():
-                return Token(TokenType.SCALAR, self.scalar(), self.source.line, self.source.column)
-
-            if self.source.current_char.isalnum():
-                return self.id()
-
-            if self.source.current_char == '+':
-                self.source.move_to_next_char()
-                return Token(TokenType.PLUS, '+', self.source.line, self.source.column)
-
-            if self.source.current_char == '-':
-                self.source.move_to_next_char()
-                return Token(TokenType.MINUS, '-', self.source.line, self.source.column)
-
-            if self.source.current_char == '*':
-                self.source.move_to_next_char()
-                return Token(TokenType.MUL, '*', self.source.line, self.source.column)
-
-            if self.source.current_char == '/':
-                self.source.move_to_next_char()
-                return Token(TokenType.FLOAT_DIV, '/', self.source.line, self.source.column)
-
-            if self.source.current_char == '(':
-                self.source.move_to_next_char()
-                return Token(TokenType.LPAREN, '(', self.source.line, self.source.column)
-
-            if self.source.current_char == ')':
-                self.source.move_to_next_char()
-                return Token(TokenType.RPAREN, ')', self.source.line, self.source.column)
-
-            if self.source.current_char == '=':
-                self.source.move_to_next_char()
-                return Token(TokenType.EQ, '=', self.source.line, self.source.column)
-
-            if self.source.current_char == '"':
-                self.source.move_to_next_char()
-                return Token(TokenType.STRING, self.string(), self.source.line, self.source.column)
-
+        # Handle single-character tokens
+        try:
+            token_type = TokenType(self.source.current_char)
+        except ValueError:
+            # No enum member with value equal to self.source.current_char.
             self.error()
+        else:
+            # No exception occurred.
+            # Create single-character token.
+            token = Token(
+                type=token_type,
+                value=token_type.value,
+                line=self.source.line,
+                column=self.source.column
+            )
+            self.source.move_to_next_char()
+            return token
 
-        return Token(TokenType.EOF, None)
+
