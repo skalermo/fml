@@ -419,27 +419,27 @@ assignment : identifier '=' (logicalExpression | string)
 \end{rail}
 
 \begin{rail}
-logicalExpression : logicalSubExpression ('or'  logicalSubExpression)?
+logicalExpression : logicalSubExpression (('or'  logicalSubExpression)*)
 \end{rail}
 
 \begin{rail}
-logicalSubExpression : equalityExpression ('and'  equalityExpression)?
+logicalSubExpression : equalityExpression (('and'  equalityExpression)*)
 \end{rail}
 
 \begin{rail}
-equalityExpression : comparisonExpression (('==' | '!=') comparisonExpression)?
+equalityExpression : comparisonExpression ((('==' | '!=') comparisonExpression)*)
 \end{rail}
 
 \begin{rail}
-comparisonExpression : simpleExpression (('<'|'<='|'>'|'>=') simpleExpression)?
+comparisonExpression : arithmeticExpression ((('<'|'<='|'>'|'>=') arithmeticExpression)*)
 \end{rail}
 
 \begin{rail}
-simpleExpression : term (('+' | '-') term)?
+arithmeticExpression : term ((('+' | '-') term)*)
 \end{rail}
 
 \begin{rail}
-term : miniterm ((('*' | '/') miniterm) | (('div' | 'mod' ) miniterm))?
+term : miniterm ((('*' | '/' | 'div' | 'mod') miniterm)*)
 \end{rail}
 
 \begin{rail}
@@ -447,7 +447,7 @@ miniterm : ('+' | '-' | not)? microterm
 \end{rail}
 
 \begin{rail}
-microterm : factor | factor '**' factor
+microterm : factor ('**' factor)?
 \end{rail}
 
 \begin{rail}
