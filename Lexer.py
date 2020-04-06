@@ -44,9 +44,15 @@ class Lexer:
         )
 
         # Handle integer part of scalar
-        while self.source.current_char.isdigit():
-            result += self.source.current_char
+        if self.source.current_char == '0':
+            result += '0'
             self.source.move_to_next_char()
+            if self.source.current_char.isdigit():
+                self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+        else:
+            while self.source.current_char.isdigit():
+                result += self.source.current_char
+                self.source.move_to_next_char()
 
         # Handle decimal part of scalar
         if self.source.current_char == '.':
@@ -120,16 +126,44 @@ class Lexer:
             column=self.source.column
         )
 
+        self.source.move_to_next_char()
+
         while self.source.current_char != '"':
             # if current char is '\'
             if self.source.current_char == '\\':
-                self.source.move_to_next_token()
-                result += f'\\{self.source.current_char}'
                 self.source.move_to_next_char()
+
+                result += {
+                    '"': '"',
+                    '\\': '\\'
+                }.get(self.source.current_char, f'\\{self.source.current_char}')
+            else:
+                result += self.source.current_char
+            self.source.move_to_next_char()
 
         self.source.move_to_next_char()
         token.value = result
         return token
+
+    def try_to_build_pow(self):
+        if self.source.current_char != '*':
+            return None
+
+        self.source.move_to_next_char()
+        if self.source.current_char == '*':
+            self.source.move_to_next_char()
+            return Token(
+                type=TokenType.POW,
+                value=TokenType.POW.value,
+                line=self.source.line,
+                column=self.source.column
+            )
+        return Token(
+            type=TokenType.MUL,
+            value=TokenType.MUL.value,
+            line=self.source.line,
+            column=self.source.column
+        )
 
     def move_to_next_token(self):
         while self.skip_comment() or self.skip_whitespace():
@@ -147,12 +181,16 @@ class Lexer:
             self.current_token = token
             return
 
+        if token := self.try_to_build_pow():
+            self.current_token = token
+            return
+
         # Handle single-character tokens
         try:
             token_type = TokenType(self.source.current_char)
         except ValueError:
             # No enum member with value equal to self.source.current_char.
-            self.error()
+            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
         else:
             # No exception occurred.
             # Create single-character token.
