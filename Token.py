@@ -19,6 +19,8 @@ class TokenType(Enum):
 
     # single-character token types
     SEMI = ';'
+    COMMA = ','
+    COLON = ':'
     PLUS = '+'
     MINUS = '-'
     MUL = '*'
@@ -26,6 +28,8 @@ class TokenType(Enum):
     ASSIGN = '='
     LPAREN = '('
     RPAREN = ')'
+    LBRACK = '['
+    RBRACK = ']'
     LESS = '<'
     GRE = '>'
     ETX = '\x03'
