@@ -28,6 +28,7 @@ class TokenType(Enum):
     RPAREN = ')'
     LESS = '<'
     GRE = '>'
+    ETX = '\x03'
 
     # other types
     LEQ = '<='
@@ -39,7 +40,6 @@ class TokenType(Enum):
     STRING = 'STRING'
     MATRIX = 'MATRIX'
     ID = 'ID'
-    EOF = 'EOF'
 
 
 def _build_reserved_keywords():
@@ -71,11 +71,6 @@ class Token:
     def __str__(self):
         """
         String representation of the class instance.
-
-        Examples:
-            Token(INTEGER, 3)
-            Token(PLUS, '+')
-            Token(MUL, '*')
         """
         return 'Token({type}, {value}, position=[{line}:{column}])'.format(
             type=self.type,
