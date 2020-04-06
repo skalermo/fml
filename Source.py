@@ -30,14 +30,20 @@ class Source:
 
 class FileSource(Source):
     def __init__(self, filename):
-        text_generator = FileSource.read_in_chunks(filename)
+        file = open(filename)
+        text_generator = FileSource.read_in_chunks(file)
 
         if text_generator is not None:
             super().__init__(text_generator)
+            self.file = file
         else:
             # File is empty
+            file.close()
             # todo
             pass
+
+    def __del__(self):
+        self.file.close()
 
     @staticmethod
     def read_in_chunks(file_object, chunk_size=1024):
