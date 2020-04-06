@@ -4,8 +4,9 @@ from Error import LexerError, ErrorCode
 
 class Lexer:
     def __init__(self, source):
+        self.current_token = None
         self.source = source
-        self.current_token = self.get_next_token()
+        self.move_to_next_token()
 
     def error(self, error_code=None):
         s = "'{lexeme}' line: {line} column: {column}".format(
@@ -31,7 +32,16 @@ class Lexer:
         return False
 
     def try_to_build_scalar(self):
+        if not self.source.current_char.isdigit():
+            return None
+
         result = ''
+        token = Token(
+            type=TokenType.SCALAR,
+            value=None,
+            line=self.source.line,
+            column=self.source.column
+        )
 
         # Handle integer part of scalar
         while self.source.current_char.isdigit():
@@ -42,36 +52,43 @@ class Lexer:
         if self.source.current_char == '.':
             result += self.source.current_char
             self.source.move_to_next_char()
-            if self.source.current_char.isdigit():
+
+            if not self.source.current_char.isdigit():
+                self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+
+            while self.source.current_char.isdigit():
+                result += self.source.current_char
                 self.source.move_to_next_char()
+
+            # Handle scientific notation
+            if self.source.current_char == 'e' or self.source.current_char == 'E':
+                result += self.source.current_char
+                self.source.move_to_next_char()
+
+                if self.source.current_char == '-' or self.source.current_char == '+':
+                    self.source.move_to_next_char()
+                    result += self.source.current_char
+
+                if not self.source.current_char.isdigit():
+                    self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+
                 while self.source.current_char.isdigit():
                     result += self.source.current_char
                     self.source.move_to_next_char()
 
-                # Handle scientific notation
-                if self.source.current_char == 'e' or self.source.current_char == 'E':
-                    result += self.source.current_char
-                    if self.source.current_char == '-' or self.source.current_char == '+':
-                        self.source.move_to_next_char()
-                        result += self.source.current_char
-                    if self.source.current_char.isdigit():
-                        self.source.move_to_next_char()
-                        while self.source.current_char.isdigit():
-                            result += self.source.current_char
-                            self.source.move_to_next_char()
-                    else:
-                        self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
-            else:
-                self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
-
-        return float(result)
+        token.value = float(result)
+        return token
 
     def try_to_build_id(self):
-        if not self.source.current_char.isalnum():
+        if not self.source.current_char.isalpha():
             return None
 
-        # Create a new token with current line and column number
-        token = Token(type=None, value=None, line=self.source.line, column=self.source.column)
+        token = Token(
+            type=None,
+            value=None,
+            line=self.source.line,
+            column=self.source.column
+        )
 
         result = self.source.current_char
         self.source.move_to_next_char()
@@ -91,37 +108,44 @@ class Lexer:
             token.value = result
         return token
 
-    def string(self):
+    def try_to_build_string(self):
+        if self.source.current_char != '"':
+            return None
         result = ''
+
+        token = Token(
+            type=TokenType.STRING,
+            value=None,
+            line=self.source.line,
+            column=self.source.column
+        )
 
         while self.source.current_char != '"':
             # if current char is '\'
-            if self.source.current_char == '\\' and self.peek() == '"':
-                result += '"'
-                self.source.move_to_next_char()
-                self.source.move_to_next_char()
-            else:
-                result += self.source.current_char
+            if self.source.current_char == '\\':
+                self.source.move_to_next_token()
+                result += f'\\{self.source.current_char}'
                 self.source.move_to_next_char()
 
         self.source.move_to_next_char()
-        return result
+        token.value = result
+        return token
 
-    def get_next_token(self):
+    def move_to_next_token(self):
         while self.skip_comment() or self.skip_whitespace():
             pass
 
-        token = None
-
         if token := self.try_to_build_scalar():
-            return token
+            self.current_token = token
+            return
 
         if token := self.try_to_build_id():
-            return token
+            self.current_token = token
+            return
 
-        if self.source.current_char == '"':
-            self.source.move_to_next_char()
-            return Token(TokenType.STRING, self.string(), self.source.line, self.source.column)
+        if token := self.try_to_build_string():
+            self.current_token = token
+            return
 
         # Handle single-character tokens
         try:
@@ -139,6 +163,7 @@ class Lexer:
                 column=self.source.column
             )
             self.source.move_to_next_char()
-            return token
+            self.current_token = token
+            return
 
 
