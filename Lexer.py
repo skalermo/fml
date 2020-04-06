@@ -30,11 +30,11 @@ class Lexer:
             return True
         return False
 
-    def scalar(self):
+    def try_to_build_scalar(self):
         result = ''
 
         # Handle integer part of scalar
-        while self.source.current_char is not None and self.source.current_char.isdigit():
+        while self.source.current_char.isdigit():
             result += self.source.current_char
             self.source.move_to_next_char()
 
@@ -42,9 +42,9 @@ class Lexer:
         if self.source.current_char == '.':
             result += self.source.current_char
             self.source.move_to_next_char()
-            if self.source.current_char is not None and self.source.current_char.isdigit():
+            if self.source.current_char.isdigit():
                 self.source.move_to_next_char()
-                while self.source.current_char is not None and self.source.current_char.isdigit():
+                while self.source.current_char.isdigit():
                     result += self.source.current_char
                     self.source.move_to_next_char()
 
@@ -54,9 +54,9 @@ class Lexer:
                     if self.source.current_char == '-' or self.source.current_char == '+':
                         self.source.move_to_next_char()
                         result += self.source.current_char
-                    if self.source.current_char is not None and self.source.current_char.isdigit():
+                    if self.source.current_char.isdigit():
                         self.source.move_to_next_char()
-                        while self.source.current_char is not None and self.source.current_char.isdigit():
+                        while self.source.current_char.isdigit():
                             result += self.source.current_char
                             self.source.move_to_next_char()
                     else:
@@ -66,16 +66,17 @@ class Lexer:
 
         return float(result)
 
-    def id(self):
+    def try_to_build_id(self):
+        if not self.source.current_char.isalnum():
+            return None
+
         # Create a new token with current line and column number
         token = Token(type=None, value=None, line=self.source.line, column=self.source.column)
 
-        result = ''
-        if self.source.current_char is not None and self.source.current_char.isalnum():
-            result += self.source.current_char
-            self.source.move_to_next_char()
-        while self.source.current_char is not None \
-                and (self.source.current_char.isalnum() or self.source.current_char == '_'):
+        result = self.source.current_char
+        self.source.move_to_next_char()
+
+        while self.source.current_char.isalnum() or self.source.current_char == '_':
             result += self.source.current_char
             self.source.move_to_next_char()
 
@@ -110,11 +111,13 @@ class Lexer:
         while self.skip_comment() or self.skip_whitespace():
             pass
 
-        if self.source.current_char.isdigit():
-            return Token(TokenType.SCALAR, self.scalar(), self.source.line, self.source.column)
+        token = None
 
-        if self.source.current_char.isalnum():
-            return self.id()
+        if token := self.try_to_build_scalar():
+            return token
+
+        if token := self.try_to_build_id():
+            return token
 
         if self.source.current_char == '"':
             self.source.move_to_next_char()
