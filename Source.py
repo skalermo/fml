@@ -1,10 +1,12 @@
+from Token import TokenType
+
+
 class Source:
     def __init__(self, text_generator):
         self._iterator = iter(text_generator)
         self._text = next(self._iterator)
         self._pos = 0
 
-        # Only these fields should be used outside
         self.current_char = self._text[self._pos]
         self.line = 1
         self.column = 1
@@ -13,8 +15,13 @@ class Source:
         # Check if text piece is over.
         # If so get next piece.
         if self._pos > len(self._text) - 1:
-            self._text = next(self._iterator)
-            self._pos = 0
+            try:
+                self._text = next(self._iterator)
+            except StopIteration:
+                self.current_char = TokenType.ETX.value
+                return
+            else:
+                self._pos = 0
 
         self.current_char = self._text[self._pos]
         self.column += 1
@@ -30,20 +37,12 @@ class Source:
 
 class FileSource(Source):
     def __init__(self, filename):
-        file = open(filename)
-        text_generator = FileSource.read_in_chunks(file)
-
-        if text_generator is not None:
-            super().__init__(text_generator)
-            self.file = file
-        else:
-            # File is empty
-            file.close()
-            # todo
-            pass
+        self._file = open(filename)
+        text_generator = FileSource.read_in_chunks(self._file)
+        super().__init__(text_generator)
 
     def __del__(self):
-        self.file.close()
+        self._file.close()
 
     @staticmethod
     def read_in_chunks(file_object, chunk_size=1024):
