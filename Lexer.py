@@ -25,7 +25,9 @@ class Lexer:
 
     def skip_comment(self):
         if self.source.current_char == '#':
-            while self.source.current_char != '\n':
+            while self.source.current_char != '\n' \
+                    and self.source.current_char != TokenType.ETX.value:
+
                 self.source.move_to_next_char()
             self.source.move_to_next_char()
             return True
