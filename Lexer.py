@@ -1,11 +1,13 @@
 from Token import TokenType, Token, RESERVED_KEYWORDS
 from Error import LexerError, ErrorCode
+from Position import PositionBuilder
 
 
 class Lexer:
     def __init__(self, source):
         self.current_token = None
         self.source = source
+        self._position_builder = PositionBuilder(source)
         self.move_to_next_token()
 
     def error(self, error_code=None):
@@ -38,12 +40,6 @@ class Lexer:
             return None
 
         result = ''
-        token = Token(
-            type=TokenType.SCALAR,
-            value=None,
-            line=self.source.line,
-            column=self.source.column
-        )
 
         # Handle integer part of scalar
         if self.source.current_char == '0':
@@ -84,19 +80,15 @@ class Lexer:
                     result += self.source.current_char
                     self.source.move_to_next_char()
 
-        token.value = float(result)
+        token = Token(
+            type=TokenType.SCALAR,
+            value=float(result),
+        )
         return token
 
     def try_to_build_id(self):
         if not self.source.current_char.isalpha():
             return None
-
-        token = Token(
-            type=None,
-            value=None,
-            line=self.source.line,
-            column=self.source.column
-        )
 
         result = self.source.current_char
         self.source.move_to_next_char()
@@ -105,28 +97,20 @@ class Lexer:
             result += self.source.current_char
             self.source.move_to_next_char()
 
-        token_type = RESERVED_KEYWORDS.get(result)
-        if token_type is None:
-            # identifier
-            token.type = TokenType.ID
-            token.value = result
-        else:
-            # reserved keyword
-            token.type = token_type
-            token.value = result
+        if token_type := RESERVED_KEYWORDS.get(result) is None:
+            token_type = TokenType.ID
+
+        token = Token(
+            type=token_type,
+            value=result,
+        )
         return token
 
     def try_to_build_string(self):
         if self.source.current_char != '"':
             return None
-        result = ''
 
-        token = Token(
-            type=TokenType.STRING,
-            value=None,
-            line=self.source.line,
-            column=self.source.column
-        )
+        result = ''
 
         self.source.move_to_next_char()
 
@@ -144,7 +128,10 @@ class Lexer:
             self.source.move_to_next_char()
 
         self.source.move_to_next_char()
-        token.value = result
+        token = Token(
+            type=TokenType.STRING,
+            value=result,
+        )
         return token
 
     def try_to_build_pow(self):
@@ -152,38 +139,41 @@ class Lexer:
             return None
 
         self.source.move_to_next_char()
+
         if self.source.current_char == '*':
             self.source.move_to_next_char()
             return Token(
                 type=TokenType.POW,
                 value=TokenType.POW.value,
-                line=self.source.line,
-                column=self.source.column
             )
         return Token(
             type=TokenType.MUL,
             value=TokenType.MUL.value,
-            line=self.source.line,
-            column=self.source.column
         )
 
     def move_to_next_token(self):
         while self.skip_comment() or self.skip_whitespace():
             pass
 
+        position = self._position_builder.current_position()
+
         if token := self.try_to_build_scalar():
+            token.position = position
             self.current_token = token
             return
 
         if token := self.try_to_build_id():
+            token.position = position
             self.current_token = token
             return
 
         if token := self.try_to_build_string():
+            token.position = position
             self.current_token = token
             return
 
         if token := self.try_to_build_pow():
+            token.position = position
             self.current_token = token
             return
 
@@ -199,8 +189,7 @@ class Lexer:
             token = Token(
                 type=token_type,
                 value=token_type.value,
-                line=self.source.line,
-                column=self.source.column
+                position=self._position_builder.current_position()
             )
             self.source.move_to_next_char()
             self.current_token = token

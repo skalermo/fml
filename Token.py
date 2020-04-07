@@ -66,21 +66,19 @@ RESERVED_KEYWORDS = _build_reserved_keywords()
 
 
 class Token:
-    def __init__(self, type, value, line=None, column=None):
+    def __init__(self, type, value, position=None):
         self.type = type
         self.value = value
-        self.line = line
-        self.column = column
+        self.position = position
 
     def __str__(self):
         """
         String representation of the class instance.
         """
-        return 'Token({type}, {value}, position=[{line}:{column}])'.format(
+        return 'Token({type}, {value}, {position})'.format(
             type=self.type,
             value=repr(self.value),
-            line=self.line,
-            column=self.column
+            position=repr(self.position)
         )
 
     def __repr__(self):
