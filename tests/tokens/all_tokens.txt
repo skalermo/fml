@@ -1,0 +1,22 @@
+## This file contains tokens of all types
+
+# 13 reserved keywords
+and div do else for fun if in mod not or ret while
+
+# identifiers
+
+a aaa a123 a_ a_123 abc_def_123gh
+
+# single-character tokens
+
+; , : + - * / = ( ) [ ] { } < >
+
+# double-character tokens
+
+<= >= == != **
+
+# scalars
+
+0 12 12.345 12.345 12.345e6 12.345e-6
+0.0 0.01 0.001e2 0.0001e-2
+
