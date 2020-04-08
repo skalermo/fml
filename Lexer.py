@@ -174,26 +174,7 @@ class Lexer:
         self.source.move_to_next_char()
         return Token(type=TokenType.NEQ)
 
-    def move_to_next_token(self):
-        while self.skip_comment() or self.skip_whitespace():
-            pass
-
-        position = self._position_builder.current_position()
-
-        methods_for_building = [
-            self.try_to_build_scalar,
-            self.try_to_build_id,
-            self.try_to_build_string,
-            self.try_to_build_similar_tokens,
-            self.try_to_build_neq
-        ]
-
-        for try_to_build_token in methods_for_building:
-            if token := try_to_build_token():
-                token.position = position
-                self.current_token = token
-                return
-
+    def try_to_build_single_char_token(self):
         # Handle single-character tokens
         try:
             token_type = TokenType(self.source.current_char)
@@ -202,13 +183,32 @@ class Lexer:
             self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
         else:
             # No exception occurred.
-            # Create single-character token.
-            self.current_token = Token(
-                type=token_type,
-                value=token_type.value,
-                position=position
-            )
+            # Return created single-character token.
             self.source.move_to_next_char()
-            return
+            return Token(type=token_type)
+
+    def move_to_next_token(self):
+        while self.skip_comment() or self.skip_whitespace():
+            pass
+
+        position = self._position_builder.current_position()
+
+        # Last method raises exception if doesn't manage to build a token
+        building_methods = [
+            self.try_to_build_scalar,
+            self.try_to_build_id,
+            self.try_to_build_string,
+            self.try_to_build_similar_tokens,
+            self.try_to_build_neq,
+            self.try_to_build_single_char_token
+        ]
+
+        for try_to_build_token in building_methods:
+            if token := try_to_build_token():
+                token.position = position
+                self.current_token = token
+                return
+
+
 
 
