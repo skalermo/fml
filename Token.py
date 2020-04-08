@@ -30,6 +30,8 @@ class TokenType(Enum):
     RPAREN = ')'
     LBRACK = '['
     RBRACK = ']'
+    LCURB = '{'
+    RCURB = '}'
     LESS = '<'
     GRE = '>'
     ETX = '\x03'
