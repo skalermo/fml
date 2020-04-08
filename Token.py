@@ -66,8 +66,10 @@ RESERVED_KEYWORDS = _build_reserved_keywords()
 
 
 class Token:
-    def __init__(self, type, value, position=None):
+    def __init__(self, type, value=None, position=None):
         self.type = type
+        if value is None:
+            value = type.value
         self.value = value
         self.position = position
 
