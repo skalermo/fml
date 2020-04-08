@@ -72,8 +72,8 @@ class Lexer:
                 self.source.move_to_next_char()
 
                 if self.source.current_char == '-' or self.source.current_char == '+':
-                    self.source.move_to_next_char()
                     result += self.source.current_char
+                    self.source.move_to_next_char()
 
                 if not self.source.current_char.isdigit():
                     self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
@@ -104,7 +104,7 @@ class Lexer:
         if length_of_result > MAX_ID_LENGTH:
             self.error(error_code=ErrorCode.EXCEED_MAX_ID_SIZE)
 
-        if token_type := RESERVED_KEYWORDS.get(result) is None:
+        if not (token_type := RESERVED_KEYWORDS.get(result)):
             token_type = TokenType.ID
 
         return Token(
@@ -140,22 +140,39 @@ class Lexer:
             value=result,
         )
 
-    def try_to_build_pow(self):
-        if self.source.current_char != '*':
+    def try_to_build_similar_tokens(self):
+        similar_token_types = [
+            (TokenType.MUL, TokenType.POW),
+            (TokenType.LESS, TokenType.LEQ),
+            (TokenType.GRE, TokenType.GEQ),
+            (TokenType.ASSIGN, TokenType.EQ)
+        ]
+        for type_1char, type_2chars in similar_token_types:
+            if token := self._generic_builder(type_1char, type_2chars):
+                return token
+        return None
+
+    def _generic_builder(self, type_1char, type_2chars):
+        if self.source.current_char != type_1char.value:
             return None
 
         self.source.move_to_next_char()
 
-        if self.source.current_char == '*':
+        if self.source.current_char == type_2chars.value[-1]:
             self.source.move_to_next_char()
-            return Token(
-                type=TokenType.POW,
-                value=TokenType.POW.value,
-            )
-        return Token(
-            type=TokenType.MUL,
-            value=TokenType.MUL.value,
-        )
+            return Token(type=type_2chars)
+        return Token(type=type_1char)
+
+    def try_to_build_neq(self):
+        if self.source.current_char != '!':
+            return None
+
+        self.source.move_to_next_char()
+
+        if self.source.current_char != '=':
+            self.error(error_code=ErrorCode.TOKEN_BUILD_FAIL)
+        self.source.move_to_next_char()
+        return Token(type=TokenType.NEQ)
 
     def move_to_next_token(self):
         while self.skip_comment() or self.skip_whitespace():
@@ -163,25 +180,19 @@ class Lexer:
 
         position = self._position_builder.current_position()
 
-        if token := self.try_to_build_scalar():
-            token.position = position
-            self.current_token = token
-            return
+        methods_for_building = [
+            self.try_to_build_scalar,
+            self.try_to_build_id,
+            self.try_to_build_string,
+            self.try_to_build_similar_tokens,
+            self.try_to_build_neq
+        ]
 
-        if token := self.try_to_build_id():
-            token.position = position
-            self.current_token = token
-            return
-
-        if token := self.try_to_build_string():
-            token.position = position
-            self.current_token = token
-            return
-
-        if token := self.try_to_build_pow():
-            token.position = position
-            self.current_token = token
-            return
+        for try_to_build_token in methods_for_building:
+            if token := try_to_build_token():
+                token.position = position
+                self.current_token = token
+                return
 
         # Handle single-character tokens
         try:
