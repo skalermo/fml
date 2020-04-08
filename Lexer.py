@@ -2,6 +2,8 @@ from Token import TokenType, Token, RESERVED_KEYWORDS
 from Error import LexerError, ErrorCode
 from Position import PositionBuilder
 
+MAX_ID_LENGTH = 128
+
 
 class Lexer:
     def __init__(self, source):
@@ -80,31 +82,35 @@ class Lexer:
                     result += self.source.current_char
                     self.source.move_to_next_char()
 
-        token = Token(
+        return Token(
             type=TokenType.SCALAR,
             value=float(result),
         )
-        return token
 
     def try_to_build_id(self):
         if not self.source.current_char.isalpha():
             return None
 
         result = self.source.current_char
+        length_of_result = 1
         self.source.move_to_next_char()
 
-        while self.source.current_char.isalnum() or self.source.current_char == '_':
+        while length_of_result <= MAX_ID_LENGTH and \
+                (self.source.current_char.isalnum() or self.source.current_char == '_'):
             result += self.source.current_char
+            length_of_result += 1
             self.source.move_to_next_char()
+
+        if length_of_result > MAX_ID_LENGTH:
+            self.error(error_code=ErrorCode.EXCEED_MAX_ID_SIZE)
 
         if token_type := RESERVED_KEYWORDS.get(result) is None:
             token_type = TokenType.ID
 
-        token = Token(
+        return Token(
             type=token_type,
             value=result,
         )
-        return token
 
     def try_to_build_string(self):
         if self.source.current_char != '"':
@@ -128,11 +134,11 @@ class Lexer:
             self.source.move_to_next_char()
 
         self.source.move_to_next_char()
-        token = Token(
+
+        return Token(
             type=TokenType.STRING,
             value=result,
         )
-        return token
 
     def try_to_build_pow(self):
         if self.source.current_char != '*':
@@ -186,13 +192,12 @@ class Lexer:
         else:
             # No exception occurred.
             # Create single-character token.
-            token = Token(
+            self.current_token = Token(
                 type=token_type,
                 value=token_type.value,
-                position=self._position_builder.current_position()
+                position=position
             )
             self.source.move_to_next_char()
-            self.current_token = token
             return
 
 
