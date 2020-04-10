@@ -26,14 +26,14 @@ class Source:
 class FileSource(Source):
     def __init__(self, filename):
         self._file = open(filename)
-        text_generator = self.read_in_chars(self._file)
+        text_generator = FileSource._read_in_chars(self._file)
         super().__init__(text_generator)
 
     def __del__(self):
         self._file.close()
 
     @staticmethod
-    def read_in_chars(file_object, chunk_size=1024):
+    def _read_in_chars(file_object, chunk_size=1024):
         """
         Lazy function (generator) to read a file piece by piece,
         and then a piece char by char.
@@ -45,3 +45,11 @@ class FileSource(Source):
                 break
             for char in chunk:
                 yield char
+
+
+class StringSource(Source):
+    def __init__(self, string):
+        self.string = string
+        text_generator = (char for char in string)
+        super().__init__(text_generator)
+
