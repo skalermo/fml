@@ -95,14 +95,16 @@ class Lexer:
             return None
 
         collected_chars = [self.source.current_char]
+        length_of_result = 1
         self.source.move_to_next_char()
 
-        while len(collected_chars) <= MAX_ID_LENGTH and \
+        while length_of_result <= MAX_ID_LENGTH and \
                 (self.source.current_char.isalnum() or self.source.current_char == '_'):
             collected_chars.append(self.source.current_char)
             self.source.move_to_next_char()
+            length_of_result += 1
 
-        if len(collected_chars) > MAX_ID_LENGTH:
+        if length_of_result > MAX_ID_LENGTH:
             self.error(error_code=ErrorCode.EXCEED_MAX_ID_SIZE)
 
         # convert to string
@@ -125,6 +127,10 @@ class Lexer:
         self.source.move_to_next_char()
 
         while self.source.current_char != '"':
+            # string hasn't been finished, ETX appeared
+            if self.source.current_char != TokenType.ETX.value:
+                self.error(error_code=ErrorCode.TOKEN_BUILD_FAIL)
+
             # if current char is '\'
             if self.source.current_char == '\\':
                 self.source.move_to_next_char()
