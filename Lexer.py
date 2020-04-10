@@ -10,7 +10,7 @@ class Lexer:
         self.current_token = None
         self.source = source
         self._position_builder = PositionBuilder(source)
-        self.move_to_next_token()
+        self.build_next_token()
 
     def error(self, error_code=None):
         s = "'{lexeme}' line: {line} column: {column}".format(
@@ -41,46 +41,49 @@ class Lexer:
         if not self.source.current_char.isdigit():
             return None
 
-        result = ''
+        collected_chars = []
 
         # Handle integer part of scalar
         if self.source.current_char == '0':
-            result += '0'
+            collected_chars.append('0')
             self.source.move_to_next_char()
             if self.source.current_char.isdigit():
-                self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+                self.error(error_code=ErrorCode.TOKEN_BUILD_FAIL)
         else:
             while self.source.current_char.isdigit():
-                result += self.source.current_char
+                collected_chars.append(self.source.current_char)
                 self.source.move_to_next_char()
 
         # Handle decimal part of scalar
         if self.source.current_char == '.':
-            result += self.source.current_char
+            collected_chars.append(self.source.current_char)
             self.source.move_to_next_char()
 
             if not self.source.current_char.isdigit():
-                self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+                self.error(error_code=ErrorCode.TOKEN_BUILD_FAIL)
 
             while self.source.current_char.isdigit():
-                result += self.source.current_char
+                collected_chars.append(self.source.current_char)
                 self.source.move_to_next_char()
 
             # Handle scientific notation
             if self.source.current_char == 'e' or self.source.current_char == 'E':
-                result += self.source.current_char
+                collected_chars.append(self.source.current_char)
                 self.source.move_to_next_char()
 
                 if self.source.current_char == '-' or self.source.current_char == '+':
-                    result += self.source.current_char
+                    collected_chars.append(self.source.current_char)
                     self.source.move_to_next_char()
 
                 if not self.source.current_char.isdigit():
-                    self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+                    self.error(error_code=ErrorCode.TOKEN_BUILD_FAIL)
 
                 while self.source.current_char.isdigit():
-                    result += self.source.current_char
+                    collected_chars.append(self.source.current_char)
                     self.source.move_to_next_char()
+
+        # convert to string
+        result = ''.join(collected_chars)
 
         return Token(
             type=TokenType.SCALAR,
@@ -91,18 +94,19 @@ class Lexer:
         if not self.source.current_char.isalpha():
             return None
 
-        result = self.source.current_char
-        length_of_result = 1
+        collected_chars = [self.source.current_char]
         self.source.move_to_next_char()
 
-        while length_of_result <= MAX_ID_LENGTH and \
+        while len(collected_chars) <= MAX_ID_LENGTH and \
                 (self.source.current_char.isalnum() or self.source.current_char == '_'):
-            result += self.source.current_char
-            length_of_result += 1
+            collected_chars.append(self.source.current_char)
             self.source.move_to_next_char()
 
-        if length_of_result > MAX_ID_LENGTH:
+        if len(collected_chars) > MAX_ID_LENGTH:
             self.error(error_code=ErrorCode.EXCEED_MAX_ID_SIZE)
+
+        # convert to string
+        result = ''.join(collected_chars)
 
         if not (token_type := RESERVED_KEYWORDS.get(result)):
             token_type = TokenType.ID
@@ -116,7 +120,7 @@ class Lexer:
         if self.source.current_char != '"':
             return None
 
-        result = ''
+        collected_chars = []
 
         self.source.move_to_next_char()
 
@@ -125,29 +129,34 @@ class Lexer:
             if self.source.current_char == '\\':
                 self.source.move_to_next_char()
 
-                result += {
+                collected_chars.append({
                     '"': '"',
                     '\\': '\\'
-                }.get(self.source.current_char, f'\\{self.source.current_char}')
+                }.get(self.source.current_char, f'\\{self.source.current_char}'))
             else:
-                result += self.source.current_char
+                collected_chars.append(self.source.current_char)
             self.source.move_to_next_char()
 
         self.source.move_to_next_char()
+
+        # convert to string
+        result = ''.join(collected_chars)
 
         return Token(
             type=TokenType.STRING,
             value=result,
         )
 
+    # Static variable
+    _similar_token_types = [
+        (TokenType.MUL, TokenType.POW),
+        (TokenType.LESS, TokenType.LEQ),
+        (TokenType.GRE, TokenType.GEQ),
+        (TokenType.ASSIGN, TokenType.EQ)
+    ]
+
     def try_to_build_similar_tokens(self):
-        similar_token_types = [
-            (TokenType.MUL, TokenType.POW),
-            (TokenType.LESS, TokenType.LEQ),
-            (TokenType.GRE, TokenType.GEQ),
-            (TokenType.ASSIGN, TokenType.EQ)
-        ]
-        for type_1char, type_2chars in similar_token_types:
+        for type_1char, type_2chars in Lexer._similar_token_types:
             if token := self._generic_builder(type_1char, type_2chars):
                 return token
         return None
@@ -180,35 +189,36 @@ class Lexer:
             token_type = TokenType(self.source.current_char)
         except ValueError:
             # No enum member with value equal to self.source.current_char.
-            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+            return None
         else:
             # No exception occurred.
             # Return created single-character token.
             self.source.move_to_next_char()
             return Token(type=token_type)
 
-    def move_to_next_token(self):
+    # Static variable
+    _building_methods = [
+        try_to_build_scalar,
+        try_to_build_id,
+        try_to_build_string,
+        try_to_build_similar_tokens,
+        try_to_build_neq,   # not equal (!=) token
+        try_to_build_single_char_token
+    ]
+
+    def build_next_token(self):
         while self.skip_comment() or self.skip_whitespace():
             pass
 
         position = self._position_builder.current_position()
 
-        # Last method raises exception if doesn't manage to build a token
-        building_methods = [
-            self.try_to_build_scalar,
-            self.try_to_build_id,
-            self.try_to_build_string,
-            self.try_to_build_similar_tokens,
-            self.try_to_build_neq,
-            self.try_to_build_single_char_token
-        ]
-
-        for try_to_build_token in building_methods:
-            if token := try_to_build_token():
+        for try_to_build_token in Lexer._building_methods:
+            if token := try_to_build_token(self):
                 token.position = position
                 self.current_token = token
                 return
 
-
+        # If no success in building a known token
+        self.error(error_code=ErrorCode.TOKEN_BUILD_FAIL)
 
 
