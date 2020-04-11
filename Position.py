@@ -1,11 +1,3 @@
-class PositionBuilder:
-    def __init__(self, source):
-        self._source = source
-
-    def current_position(self):
-        return Position(self._source)
-
-
 class Position:
     def __init__(self, source):
         self.line = source.line

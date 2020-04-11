@@ -1,6 +1,6 @@
 from Token import TokenType, Token, RESERVED_KEYWORDS
 from Error import LexerError, ErrorCode
-from Position import PositionBuilder
+from Position import Position
 
 MAX_ID_LENGTH = 128
 
@@ -9,14 +9,12 @@ class Lexer:
     def __init__(self, source):
         self.current_token = None
         self.source = source
-        self._position_builder = PositionBuilder(source)
         self.build_next_token()
 
     def error(self, error_code=None):
-        s = "'{lexeme}' line: {line} column: {column}".format(
+        s = "'{lexeme}' line: {position.line} column: {position.column}".format(
             lexeme=self.source.current_char,
-            line=self.source.line,
-            column=self.source.column,
+            position=Position(self.source)
         )
         raise LexerError(error_code=error_code, message=s)
 
@@ -216,7 +214,7 @@ class Lexer:
         while self.skip_comment() or self.skip_whitespace():
             pass
 
-        position = self._position_builder.current_position()
+        position = Position(self.source)
 
         for try_to_build_token in Lexer._building_methods:
             if token := try_to_build_token(self):
