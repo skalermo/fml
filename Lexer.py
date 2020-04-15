@@ -122,16 +122,14 @@ class Lexer:
             return None
 
         collected_chars = [self.source.current_char]
-        length_of_result = 1
         self.source.move_to_next_char()
 
-        while length_of_result <= Lexer.MAX_ID_LENGTH and \
+        while len(collected_chars) <= Lexer.MAX_ID_LENGTH and \
                 (self.source.current_char.isalnum() or self.source.current_char == '_'):
             collected_chars.append(self.source.current_char)
             self.source.move_to_next_char()
-            length_of_result += 1
 
-        if length_of_result > Lexer.MAX_ID_LENGTH:
+        if len(collected_chars) > Lexer.MAX_ID_LENGTH:
             self.error(error_code=ErrorCode.EXCEED_MAX_ID_SIZE)
 
         # convert to string
