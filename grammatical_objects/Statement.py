@@ -4,19 +4,24 @@ class Statement:
 
 class ReturnStatement:
     def __init__(self, expression_to_return):
-        self.expr = expression_to_return
-
-
-class DoWhileLoop(Statement):
-    pass
+        self.expression = expression_to_return
 
 
 class WhileLoop(Statement):
+    def __init__(self, statement, logical_expression):
+        self.statement = statement
+        self.logical_expression = logical_expression
+
+
+class DoWhileLoop(WhileLoop):
     pass
 
 
 class IfStatement(Statement):
-    pass
+    def __init__(self, logical_expression, statement, else_statement: [Statement, None]):
+        self.logical_expression = logical_expression
+        self.statement = statement
+        self.else_statement = else_statement
 
 
 class CompoundStatement(Statement):
