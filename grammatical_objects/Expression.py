@@ -10,41 +10,41 @@ class LogicalExpression(Expression):
     pass
 
 
-class LogicalSubExpression(Expression):
+class LogicalSubExpression:
     pass
 
 
-class EqualitySubExpression(Expression):
+class EqualitySubExpression:
     pass
 
 
-class ComparisonExpression(Expression):
+class ComparisonExpression:
     pass
 
 
-class ArithmeticExpression(Expression):
+class ArithmeticExpression:
     pass
 
 
-class Term(Expression):
+class Term:
     pass
 
 
-class MiniTerm(Expression):
+class MiniTerm:
     pass
 
 
-class MicroTerm(Expression):
+class MicroTerm:
     pass
 
 
-class Factor(Expression):
+class Factor:
     pass
 
 
-class FunctionCall(Expression):
+class FunctionCall:
     pass
 
 
-class MatrixSubscripting(Expression):
+class MatrixSubscripting:
     pass
