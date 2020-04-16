@@ -3,7 +3,7 @@ from Error import ParserError, ErrorCode
 from Position import Position
 from grammatical_objects.Program import Program
 from grammatical_objects.Function import FunctionDefinition
-from grammatical_objects.Statement import CompoundStatement
+from grammatical_objects.Statement import *
 
 
 class Parser:
@@ -61,6 +61,13 @@ class Parser:
         return FunctionDefinition(fun_id, parameter_list, statement)
 
     def parse_statement(self):
+        if self.lexer.current_token.type == TokenType.RETURN:
+            self.lexer.build_next_token()
+            expression = self.try_to_parse_expression()
+            if self.lexer.current_token.type != TokenType.SEMI:
+                self.error(error_code=ErrorCode.EXPECTED_SEMI)
+            return ReturnStatement(expression)
+
         for try_to_parse_statement in Parser._parse_methods:
             if statement := try_to_parse_statement(self):
                 return statement
@@ -106,7 +113,7 @@ class Parser:
         if self.lexer.current_token.type != TokenType.ID:
             self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
 
-        parameter_list = [self.lexer.current_token]
+        parameter_list = [self.lexer.current_token.value]
         self.lexer.build_next_token()
 
         while self.lexer.current_token.type != TokenType.RPAREN:
