@@ -4,6 +4,7 @@ from Position import Position
 from grammatical_objects.Program import Program
 from grammatical_objects.Function import FunctionDefinition
 from grammatical_objects.Statement import *
+from grammatical_objects.Expression import *
 
 
 class Parser:
@@ -157,10 +158,18 @@ class Parser:
         if self.lexer.current_token.type != TokenType.ID:
             self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
 
-        assignee = self.lexer.current_token.value
+        lhs = self.lexer.current_token.value
         self.lexer.build_next_token()
 
+        self.expect(TokenType.EQ)
 
+        if self.lexer.current_token.type == TokenType.STRING:
+            # todo Make string an object to handle evaluate() call
+            rhs = self.lexer.current_token.value
+            return Assignment(lhs, rhs)
+
+        rhs = self.try_to_parse_logical_expression()
+        return Assignment(lhs, rhs)
 
     def try_to_parse_logical_expression(self):
         pass

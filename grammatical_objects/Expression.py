@@ -2,12 +2,14 @@ class Expression:
     pass
 
 
-class Assignment(Expression):
-    pass
-
-
 class LogicalExpression(Expression):
     pass
+
+
+class Assignment(Expression):
+    def __init__(self, lhs: str, rhs: [str, LogicalExpression]):
+        self.lhs = lhs
+        self.rhs = rhs
 
 
 class LogicalSubExpression:
