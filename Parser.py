@@ -50,15 +50,6 @@ class Parser:
         return FunctionDefinition(fun_id, parameter_list, statement)
 
     def parse_statement(self):
-        if self.lexer.current_token.type == TokenType.RETURN:
-            self.lexer.build_next_token()
-
-            expression = self.try_to_parse_expression()
-
-            if self.lexer.current_token.type != TokenType.SEMI:
-                self.error(error_code=ErrorCode.EXPECTED_SEMI)
-            return ReturnStatement(expression)
-
         # Handle do_while_loop apart from other statements
         # because of the mandatory semi at the end
         if statement := self.try_to_parse_do_while_loop():
@@ -70,6 +61,7 @@ class Parser:
                                        self.try_to_parse_for_loop,
                                        self.try_to_parse_if_statement,
                                        self.try_to_parse_compound_statement,
+                                       self.try_to_parse_ret_statement,
                                        self.try_to_parse_expression]:
             if statement := try_to_parse_statement(self):
                 return statement
@@ -142,6 +134,17 @@ class Parser:
 
         self.lexer.build_next_token()
         return CompoundStatement(statement_list)
+
+    def try_to_parse_ret_statement(self):
+        if self.lexer.current_token.type != TokenType.RETURN:
+            return None
+        self.lexer.build_next_token()
+
+        expression = self.try_to_parse_expression()
+
+        if self.lexer.current_token.type != TokenType.SEMI:
+            self.error(error_code=ErrorCode.EXPECTED_SEMI)
+        return ReturnStatement(expression)
 
     def try_to_parse_expression(self):
         for try_to_parse_expression in [self.try_to_parse_assignment,
