@@ -1,5 +1,10 @@
+from Token import TokenType
+
+
 class Expression:
-    pass
+    def __init__(self, subexpressions, used_operators):
+        self.subexpressions = subexpressions
+        self.operators = used_operators
 
 
 class ConditionExpression(Expression):
@@ -7,7 +12,7 @@ class ConditionExpression(Expression):
     pass
 
 
-class Assignment(Expression):
+class Assignment:
     def __init__(self, lhs: str, rhs: [str, ConditionExpression]):
         self.lhs = lhs
         self.rhs = rhs
@@ -17,7 +22,7 @@ class AndExpression:
     pass
 
 
-class EqualitySubExpression:
+class EqualityExpression:
     pass
 
 
@@ -34,7 +39,44 @@ class Term:
 
 
 class MiniTerm:
-    pass
+    def __init__(self, unary_operator, microterm):
+        self.unary_operator = unary_operator
+        self.microterm = microterm
+
+
+# This dictionary structure:
+#   ExpressionClass(key) -> [SubExpressionClass, [Operators]](value)
+#   'SubExpression' is a term of 'Expression'. It is also the next key in the dict.
+#   'Operators' are possible to encounter operators in each expression.
+subexpressions_and_binary_operators = {
+        ConditionExpression: [
+            AndExpression,
+            [TokenType.OR]
+        ],
+        AndExpression: [
+            EqualityExpression,
+            [TokenType.AND]
+        ],
+        EqualityExpression: [
+            RelativeExpression,
+            [TokenType.EQ, TokenType.NEQ]
+        ],
+        RelativeExpression: [
+            ArithmeticExpression,
+            [TokenType.LEQ, TokenType.LESS,
+             TokenType.GEQ, TokenType.GRE]
+        ],
+        ArithmeticExpression: [
+            Term,
+            [TokenType.PLUS, TokenType.MINUS]
+        ],
+        Term: [
+            MiniTerm,
+            [TokenType.MUL, TokenType.FLOAT_DIV,
+             TokenType.INTEGER_DIV, TokenType.MODULO]
+        ],
+        MiniTerm: None
+    }
 
 
 class MicroTerm:
