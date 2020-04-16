@@ -8,13 +8,12 @@ from grammatical_objects.Statement import *
 
 class Parser:
     # Static variables
-    _parse_methods = []
+    _parse_statement_methods = []
 
     @classmethod
     def set_static_vars(cls):
-        cls._parse_methods.extend([
+        cls._parse_statement_methods.extend([
             cls.try_to_parse_expression,
-            cls.try_to_parse_do_while_loop,
             cls.try_to_parse_while_loop,
             cls.try_to_parse_for_loop,
             cls.try_to_parse_if_statement,
@@ -68,7 +67,14 @@ class Parser:
                 self.error(error_code=ErrorCode.EXPECTED_SEMI)
             return ReturnStatement(expression)
 
-        for try_to_parse_statement in Parser._parse_methods:
+        # Handle do_while_loop apart from other statements
+        # because of the mandatory semi at the end
+        if statement := self.try_to_parse_do_while_loop():
+            if self.lexer.current_token.type != TokenType.SEMI:
+                self.error(error_code=ErrorCode.EXPECTED_SEMI)
+            return statement
+
+        for try_to_parse_statement in Parser._parse_statement_methods:
             if statement := try_to_parse_statement(self):
                 return statement
         return None
