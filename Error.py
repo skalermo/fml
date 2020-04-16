@@ -13,6 +13,7 @@ class ErrorCode:
     EXCEED_MAX_ID_SIZE = 'Exceeded max length of an identifier'
 
     UNEXPECTED_TOKEN = 'Unexpected token'
+    EXPECTED_STATEMENT = 'Expected statement'
     ID_NOT_FOUND = 'Identifier not found'
     DUPLICATE_ID = 'Duplicate id found'
 
