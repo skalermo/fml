@@ -7,19 +7,6 @@ from grammatical_objects.Statement import *
 
 
 class Parser:
-    # Static variables
-    _parse_statement_methods = []
-
-    @classmethod
-    def set_static_vars(cls):
-        cls._parse_statement_methods.extend([
-            cls.try_to_parse_expression,
-            cls.try_to_parse_while_loop,
-            cls.try_to_parse_for_loop,
-            cls.try_to_parse_if_statement,
-            cls.try_to_parse_compound_statement
-        ])
-
     def __init__(self, lexer):
         self.lexer = lexer
         self.program = self.parse_program()
@@ -62,7 +49,9 @@ class Parser:
     def parse_statement(self):
         if self.lexer.current_token.type == TokenType.RETURN:
             self.lexer.build_next_token()
+
             expression = self.try_to_parse_expression()
+
             if self.lexer.current_token.type != TokenType.SEMI:
                 self.error(error_code=ErrorCode.EXPECTED_SEMI)
             return ReturnStatement(expression)
@@ -74,25 +63,81 @@ class Parser:
                 self.error(error_code=ErrorCode.EXPECTED_SEMI)
             return statement
 
-        for try_to_parse_statement in Parser._parse_statement_methods:
+        for try_to_parse_statement in [self.try_to_parse_while_loop,
+                                       self.try_to_parse_for_loop,
+                                       self.try_to_parse_if_statement,
+                                       self.try_to_parse_compound_statement,
+                                       self.try_to_parse_expression]:
             if statement := try_to_parse_statement(self):
                 return statement
         return None
 
-    def try_to_parse_expression(self):
-        pass
-
     def try_to_parse_do_while_loop(self):
-        pass
+        if self.lexer.current_token.type != TokenType.DO:
+            return None
+        self.lexer.build_next_token()
+
+        statement = self.parse_statement()
+
+        if self.lexer.current_token.type != TokenType.WHILE:
+            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+        self.lexer.build_next_token()
+
+        if self.lexer.current_token.type != TokenType.LPAREN:
+            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+        self.lexer.build_next_token()
+
+        logical_expr = self.try_to_parse_logical_expression()
+
+        if self.lexer.current_token.type != TokenType.RPAREN:
+            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+        self.lexer.build_next_token()
+
+        return DoWhileLoop(statement, logical_expr)
 
     def try_to_parse_while_loop(self):
-        pass
+        if self.lexer.current_token.type != TokenType.WHILE:
+            return None
+
+        if self.lexer.current_token.type != TokenType.LPAREN:
+            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+        self.lexer.build_next_token()
+
+        logical_expr = self.try_to_parse_logical_expression()
+
+        if self.lexer.current_token.type != TokenType.RPAREN:
+            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+        self.lexer.build_next_token()
+
+        statement = self.parse_statement()
+        return WhileLoop(statement, logical_expr)
 
     def try_to_parse_for_loop(self):
         pass
 
     def try_to_parse_if_statement(self):
-        pass
+        if self.lexer.current_token.type != TokenType.IF:
+            return None
+        self.lexer.build_next_token()
+
+        if self.lexer.current_token.type != TokenType.LPAREN:
+            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+        self.lexer.build_next_token()
+
+        logical_expr = self.try_to_parse_logical_expression()
+
+        if self.lexer.current_token.type != TokenType.RPAREN:
+            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+        self.lexer.build_next_token()
+
+        statement = self.parse_statement()
+        else_statement = None
+
+        if self.lexer.current_token.type == TokenType.ELSE:
+            self.lexer.build_next_token()
+            else_statement = self.parse_statement()
+
+        return IfStatement(logical_expr, statement, else_statement)
 
     def try_to_parse_compound_statement(self):
         if self.lexer.current_token != TokenType.LCURB:
@@ -109,6 +154,20 @@ class Parser:
 
         self.lexer.build_next_token()
         return CompoundStatement(statement_list)
+
+    def try_to_parse_expression(self):
+        for try_to_parse_expression in [self.try_to_parse_assignment,
+                                        self.try_to_parse_logical_expression]:
+            if expression := try_to_parse_expression(self):
+                return expression
+        return None
+
+    def try_to_parse_assignment(self):
+        pass
+
+    def try_to_parse_logical_expression(self):
+        pass
+
 
     def try_to_parse_fun_parameters(self):
         if self.lexer.current_token.type == TokenType.RPAREN:
@@ -141,3 +200,4 @@ class Parser:
             position=Position(self.lexer.source)
         )
         raise ParserError(error_code=error_code, message=s)
+
