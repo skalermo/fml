@@ -2,17 +2,18 @@ class Expression:
     pass
 
 
-class LogicalExpression(Expression):
+class ConditionExpression(Expression):
+    # OrExpression
     pass
 
 
 class Assignment(Expression):
-    def __init__(self, lhs: str, rhs: [str, LogicalExpression]):
+    def __init__(self, lhs: str, rhs: [str, ConditionExpression]):
         self.lhs = lhs
         self.rhs = rhs
 
 
-class LogicalSubExpression:
+class AndExpression:
     pass
 
 
@@ -20,7 +21,7 @@ class EqualitySubExpression:
     pass
 
 
-class ComparisonExpression:
+class RelativeExpression:
     pass
 
 
