@@ -11,6 +11,11 @@ class Parser:
         self.lexer = lexer
         self.program = self.parse_program()
 
+    def expect(self, expected_token_type):
+        if self.lexer.current_token.type != expected_token_type:
+            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+        self.lexer.build_next_token()
+
     def parse_program(self):
         fun_defs = {}
         statements = []
@@ -35,10 +40,8 @@ class Parser:
         fun_id = self.lexer.current_token.value
         self.lexer.build_next_token()
 
-        if self.lexer.current_token.type != TokenType.LPAREN:
-            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+        self.expect(TokenType.LPAREN)
 
-        self.lexer.build_next_token()
         parameter_list = self.try_to_parse_fun_parameters()
 
         if statement := self.parse_statement() is None:
@@ -79,19 +82,12 @@ class Parser:
 
         statement = self.parse_statement()
 
-        if self.lexer.current_token.type != TokenType.WHILE:
-            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
-        self.lexer.build_next_token()
-
-        if self.lexer.current_token.type != TokenType.LPAREN:
-            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
-        self.lexer.build_next_token()
+        self.expect(TokenType.WHILE)
+        self.expect(TokenType.LPAREN)
 
         logical_expr = self.try_to_parse_logical_expression()
 
-        if self.lexer.current_token.type != TokenType.RPAREN:
-            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
-        self.lexer.build_next_token()
+        self.expect(TokenType.RPAREN)
 
         return DoWhileLoop(statement, logical_expr)
 
@@ -99,15 +95,11 @@ class Parser:
         if self.lexer.current_token.type != TokenType.WHILE:
             return None
 
-        if self.lexer.current_token.type != TokenType.LPAREN:
-            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
-        self.lexer.build_next_token()
+        self.expect(TokenType.LPAREN)
 
         logical_expr = self.try_to_parse_logical_expression()
 
-        if self.lexer.current_token.type != TokenType.RPAREN:
-            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
-        self.lexer.build_next_token()
+        self.expect(TokenType.RPAREN)
 
         statement = self.parse_statement()
         return WhileLoop(statement, logical_expr)
@@ -120,15 +112,11 @@ class Parser:
             return None
         self.lexer.build_next_token()
 
-        if self.lexer.current_token.type != TokenType.LPAREN:
-            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
-        self.lexer.build_next_token()
+        self.expect(TokenType.LPAREN)
 
         logical_expr = self.try_to_parse_logical_expression()
 
-        if self.lexer.current_token.type != TokenType.RPAREN:
-            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
-        self.lexer.build_next_token()
+        self.expect(TokenType.RPAREN)
 
         statement = self.parse_statement()
         else_statement = None
@@ -163,7 +151,13 @@ class Parser:
         return None
 
     def try_to_parse_assignment(self):
-        pass
+        if self.lexer.current_token.type != TokenType.ID:
+            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+
+        assignee = self.lexer.current_token.value
+        self.lexer.build_next_token()
+
+
 
     def try_to_parse_logical_expression(self):
         pass
