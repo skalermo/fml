@@ -1,5 +1,6 @@
 from Source import TokenType
 from Error import ParserError, ErrorCode
+from Position import Position
 from grammatical_objects.Program import Program
 from grammatical_objects.Function import FunctionDefinition
 from grammatical_objects.Statement import CompoundStatement
@@ -54,9 +55,8 @@ class Parser:
         self.lexer.build_next_token()
         parameter_list = self.try_to_parse_fun_parameters()
 
-        statement = self.parse_statement()
-        # if fun_def.body is None:
-        #     self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+        if statement := self.parse_statement() is None:
+            self.error(error_code=ErrorCode.EXPECTED_STATEMENT)
 
         return FunctionDefinition(fun_id, parameter_list, statement)
 
@@ -64,7 +64,6 @@ class Parser:
         for try_to_parse_statement in Parser._parse_methods:
             if statement := try_to_parse_statement(self):
                 return statement
-
         return None
 
     def try_to_parse_expression(self):
@@ -124,5 +123,8 @@ class Parser:
 
         return parameter_list
 
-    def error(self, error_code=None, token=None):
-        raise ParserError(error_code=error_code, message='')
+    def error(self, error_code=None):
+        s = 'line: {position.line} column: {position.column}'.format(
+            position=Position(self.lexer.source)
+        )
+        raise ParserError(error_code=error_code, message=s)
