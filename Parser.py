@@ -124,7 +124,25 @@ class Parser:
         return WhileLoop(statement, logical_expr)
 
     def try_to_parse_for_loop(self):
-        pass
+        if self.lexer.current_token.type != TokenType.FOR:
+            return None
+        self.lexer.build_next_token()
+
+        self.expect(TokenType.LPAREN)
+
+        if self.lexer.current_token.type != TokenType.ID:
+            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+        # todo decide which to pass to variables: str or token
+        var = self.lexer.current_token.value
+        self.lexer.build_next_token()
+        self.expect(TokenType.IN)
+        for parse_iterable in [self.try_to_parse_id,
+                               self.try_to_parse_matrix,
+                               self.try_to_parse_string]:
+            iterable = parse_iterable(self)
+        self.expect(TokenType.RPAREN)
+        statement = self.parse_statement()
+        return ForLoop(var, iterable, statement)
 
     def try_to_parse_if_statement(self):
         if self.lexer.current_token.type != TokenType.IF:
@@ -184,18 +202,15 @@ class Parser:
         if self.lexer.current_token.type != TokenType.ID:
             self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
 
-        lhs = self.lexer.current_token.value
-        self.lexer.build_next_token()
+        lhs = self.try_to_parse_id()
 
         self.expect(TokenType.EQ)
 
-        if self.lexer.current_token.type == TokenType.STRING:
-            # todo Make string an object to handle evaluate() call
-            rhs = self.lexer.current_token.value
-            return Assignment(lhs, rhs)
-
-        rhs = self.try_to_parse_condition_expression()
-        return Assignment(lhs, rhs)
+        for try_to_parse_assignment in [self.try_to_parse_string,
+                                        self.try_to_parse_condition_expression]:
+            if rhs := try_to_parse_assignment(self):
+                return Assignment(lhs, rhs)
+        return None
 
     def try_to_parse_condition_expression(self):
         and_expressions = [self.try_to_parse_andExpression()]
@@ -298,10 +313,18 @@ class Parser:
         id = self.lexer.current_token.value
         self.lexer.build_next_token()
 
-        for parse_method in [self.try_to_parse_function_call,
+        for parse_method in [self.try_to_parse_id,
+                             self.try_to_parse_function_call,
                              self.try_to_parse_matrix_subscripting]:
             if non_constant := parse_method(self, id):
                 return non_constant
+        return None
+
+    def try_to_parse_id(self):
+        if self.lexer.current_token.type != TokenType.ID:
+            return None
+        id = self.lexer.current_token.value
+        self.lexer.build_next_token()
         return Identifier(id)
 
     def try_to_parse_function_call(self, id):
@@ -346,6 +369,11 @@ class Parser:
         scalar = Scalar(self.lexer.current_token())
         self.lexer.build_next_token()
         return scalar
+
+    def try_to_parse_string(self):
+        if self.lexer.current_token.type != TokenType.STRING:
+            return None
+        return String(self.lexer.current_token)
 
     def try_to_parse_matrix(self):
         if self.lexer.current_token.type != TokenType.LBRACK:

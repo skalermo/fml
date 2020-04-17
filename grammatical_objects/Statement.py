@@ -7,6 +7,13 @@ class ReturnStatement:
         self.expression = expression_to_return
 
 
+class ForLoop:
+    def __init__(self, var, iterable, statement):
+        self.var = var
+        self.iterable = iterable
+        self.statement = statement
+
+
 class WhileLoop(Statement):
     def __init__(self, statement, logical_expression):
         self.statement = statement

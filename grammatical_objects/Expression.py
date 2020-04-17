@@ -13,7 +13,8 @@ class ConditionExpression(Expression):
 
 
 class Assignment:
-    def __init__(self, lhs: str, rhs: [str, ConditionExpression]):
+    def __init__(self, lhs, rhs):
+        # rhs: Identifier or ConditionalExpression
         self.lhs = lhs
         self.rhs = rhs
 
@@ -43,10 +44,12 @@ class MiniTerm:
         self.unary_operator = unary_operator
         self.microterm = microterm
 
+
 class MicroTerm:
     def __init__(self, base, power):
         self.base = base
         self.power = power
+
 
 class Factor:
     pass
@@ -74,3 +77,8 @@ class MatrixIndex:
     def __init__(self, expression, is_full_index=False):
         self.expression = expression
         self.is_full_index = is_full_index
+
+
+class String:
+    def __init__(self, token):
+        self.token = token
