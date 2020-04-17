@@ -1,13 +1,18 @@
-from Token import TokenType
+class Evaluable:
+    pass
 
 
-class Expression:
+class Expression(Evaluable):
+    pass
+
+
+class MultitermExpression(Expression):
     def __init__(self, subexpressions, used_operators=None):
         self.subexpressions = subexpressions
         self.operators = used_operators
 
 
-class ConditionExpression(Expression):
+class ConditionExpression(MultitermExpression):
     # OrExpression
     pass
 
@@ -19,54 +24,54 @@ class Assignment:
         self.rhs = rhs
 
 
-class AndExpression(Expression):
+class AndExpression(MultitermExpression):
     pass
 
 
-class EqualityExpression(Expression):
+class EqualityExpression(MultitermExpression):
     pass
 
 
-class RelativeExpression(Expression):
+class RelativeExpression(MultitermExpression):
     pass
 
 
-class ArithmeticExpression(Expression):
+class ArithmeticExpression(MultitermExpression):
     pass
 
 
-class Term(Expression):
+class Term(MultitermExpression):
     pass
 
 
-class MiniTerm:
+class MiniTerm(Expression):
     def __init__(self, unary_operator, microterm):
         self.unary_operator = unary_operator
         self.microterm = microterm
 
 
-class MicroTerm:
+class MicroTerm(Expression):
     def __init__(self, base, power):
         self.base = base
         self.power = power
 
 
-class Factor:
+class Factor(Expression):
     pass
 
 
-class FunctionCall:
+class FunctionCall(Expression):
     def __init__(self, id, argument_list):
         self.id = id
         self.argument_list = argument_list
 
 
-class Identifier:
+class Identifier(Expression):
     def __init__(self, id):
         self.id = id
 
 
-class MatrixSubscripting:
+class MatrixSubscripting(Expression):
     def __init__(self, id, idx, idx2):
         self.id = id
         self.row_index = idx

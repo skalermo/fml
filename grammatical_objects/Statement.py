@@ -1,13 +1,17 @@
-class Statement:
+class Executable:
     pass
 
 
-class ReturnStatement:
+class Statement(Executable):
+    pass
+
+
+class ReturnStatement(Statement):
     def __init__(self, expression_to_return):
         self.expression = expression_to_return
 
 
-class ForLoop:
+class ForLoop(Statement):
     def __init__(self, var, iterable, statement):
         self.var = var
         self.iterable = iterable

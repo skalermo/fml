@@ -1,5 +1,6 @@
 from Error import ParserError, ErrorCode
 from Position import Position
+from Token import TokenType
 from grammatical_objects.Program import Program
 from grammatical_objects.Function import FunctionDefinition
 from grammatical_objects.Statement import *
