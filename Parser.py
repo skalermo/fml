@@ -1,10 +1,10 @@
-from Source import TokenType
 from Error import ParserError, ErrorCode
 from Position import Position
 from grammatical_objects.Program import Program
 from grammatical_objects.Function import FunctionDefinition
 from grammatical_objects.Statement import *
 from grammatical_objects.Expression import *
+from grammatical_objects.Constants import *
 
 
 class Parser:
@@ -214,6 +214,7 @@ class Parser:
         return ExpressionClass(subexpressions, used_operators)
 
     def try_to_parse_miniterm(self):
+        # todo Refactor of names 'parse' and 'try to parse'
         unary_operator = None
         if self.lexer.current_token.type in [TokenType.PLUS,
                                              TokenType.MINUS,
@@ -230,6 +231,53 @@ class Parser:
 
     def try_to_parse_factor(self):
         pass
+
+    def try_to_parse_constant(self):
+        for parse_scalar in [self.try_to_parse_scalar,
+                             self.try_to_parse_matrix]:
+            if constant := parse_scalar(self):
+                return constant
+        return None
+
+    def try_to_parse_scalar(self):
+        if self.lexer.current_token.type != TokenType.SCALAR:
+            return None
+        scalar = Scalar(self.lexer.current_token())
+        self.lexer.build_next_token()
+        return scalar
+
+    def try_to_parse_matrix(self):
+        if self.lexer.current_token.type != TokenType.LBRACK:
+            return None
+        start_position = self.lexer.current_token.position
+        self.lexer.build_next_token()
+
+        rows = [self.try_to_parse_matrix_row()]
+
+        while self.lexer.current_token.type == TokenType.SEMI:
+            self.lexer.build_next_token()
+            rows.append(self.try_to_parse_matrix_row())
+            if len(rows[-1]) != len(rows[-2]):
+                self.error(error_code=ErrorCode.MTRX_ROW_LEN_MISMATCH)
+
+        return Matrix(rows)
+
+    def try_to_parse_matrix_row(self):
+        expressions = [self.try_to_parse_expression()]
+
+        while self.lexer.current_token.type == TokenType.COMMA:
+            self.lexer.build_next_token()
+            expressions.append(self.try_to_parse_expression())
+
+        return MatrixRow(expressions)
+
+    def try_to_parse_expression_in_brackets(self):
+        if self.lexer.current_token.type != TokenType.LPAREN:
+            return None
+        self.lexer.build_next_token()
+        expression = self.try_to_parse_expression()
+        self.expect(TokenType.RPAREN)
+        return expression
 
     def error(self, error_code=None):
         s = 'line: {position.line} column: {position.column}'.format(
