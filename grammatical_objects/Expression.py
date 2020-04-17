@@ -18,23 +18,23 @@ class Assignment:
         self.rhs = rhs
 
 
-class AndExpression:
+class AndExpression(Expression):
     pass
 
 
-class EqualityExpression:
+class EqualityExpression(Expression):
     pass
 
 
-class RelativeExpression:
+class RelativeExpression(Expression):
     pass
 
 
-class ArithmeticExpression:
+class ArithmeticExpression(Expression):
     pass
 
 
-class Term:
+class Term(Expression):
     pass
 
 
@@ -42,42 +42,6 @@ class MiniTerm:
     def __init__(self, unary_operator, microterm):
         self.unary_operator = unary_operator
         self.microterm = microterm
-
-
-# This dictionary structure:
-#   ExpressionClass(key) -> [SubExpressionClass, [Operators]](value)
-#   'SubExpression' is a term of 'Expression'. It is also the next key in the dict.
-#   'Operators' are possible to encounter operators in each expression.
-subexpressions_and_binary_operators = {
-        ConditionExpression: [
-            AndExpression,
-            [TokenType.OR]
-        ],
-        AndExpression: [
-            EqualityExpression,
-            [TokenType.AND]
-        ],
-        EqualityExpression: [
-            RelativeExpression,
-            [TokenType.EQ, TokenType.NEQ]
-        ],
-        RelativeExpression: [
-            ArithmeticExpression,
-            [TokenType.LEQ, TokenType.LESS,
-             TokenType.GEQ, TokenType.GRE]
-        ],
-        ArithmeticExpression: [
-            Term,
-            [TokenType.PLUS, TokenType.MINUS]
-        ],
-        Term: [
-            MiniTerm,
-            [TokenType.MUL, TokenType.FLOAT_DIV,
-             TokenType.INTEGER_DIV, TokenType.MODULO]
-        ],
-        MiniTerm: None
-    }
-
 
 class MicroTerm:
     def __init__(self, base, power):

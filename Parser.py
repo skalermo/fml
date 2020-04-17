@@ -104,7 +104,7 @@ class Parser:
         self.expect(TokenType.WHILE)
         self.expect(TokenType.LPAREN)
 
-        logical_expr = self._generic_parser(ConditionExpression)
+        logical_expr = self.try_to_parse_condition_expression()
 
         self.expect(TokenType.RPAREN)
 
@@ -116,7 +116,7 @@ class Parser:
 
         self.expect(TokenType.LPAREN)
 
-        logical_expr = self._generic_parser(ConditionExpression)
+        logical_expr = self.try_to_parse_condition_expression()
 
         self.expect(TokenType.RPAREN)
 
@@ -133,7 +133,7 @@ class Parser:
 
         self.expect(TokenType.LPAREN)
 
-        cond_expr = self._generic_parser(ConditionExpression)
+        cond_expr = self.try_to_parse_condition_expression()
 
         self.expect(TokenType.RPAREN)
 
@@ -175,7 +175,7 @@ class Parser:
 
     def try_to_parse_expression(self):
         for try_to_parse_expression in [self.try_to_parse_assignment,
-                                        self._generic_parser(ConditionExpression)]:
+                                        self.try_to_parse_condition_expression()]:
             if expression := try_to_parse_expression(self):
                 return expression
         return None
@@ -194,81 +194,78 @@ class Parser:
             rhs = self.lexer.current_token.value
             return Assignment(lhs, rhs)
 
-        rhs = self._generic_parser(ConditionExpression)
+        rhs = self.try_to_parse_condition_expression()
         return Assignment(lhs, rhs)
 
-    def _generic_parser(self, ExpressionClass):
-        if ExpressionClass is MiniTerm:
-            return self.try_to_parse_miniterm()
+    def try_to_parse_condition_expression(self):
+        and_expressions = [self.try_to_parse_andExpression()]
 
-        SubExpressionClass = subexpressions_and_binary_operators[ExpressionClass][0]
-        operators = subexpressions_and_binary_operators[ExpressionClass][1]
-        subexpressions = [self._generic_parser(SubExpressionClass)]
+        while self.lexer.current_token.type == TokenType.OR:
+            self.lexer.build_next_token()
+            and_expressions.append(self.try_to_parse_andExpression())
+
+        return ConditionExpression(and_expressions)
+
+    def try_to_parse_andExpression(self):
+        equality_expressions = [self.try_to_parse_equality_expression()]
+
+        while self.lexer.current_token.type == TokenType.AND:
+            self.lexer.build_next_token()
+            equality_expressions.append(self.try_to_parse_equality_expression())
+
+        return AndExpression(equality_expressions)
+
+    def try_to_parse_equality_expression(self):
+        relative_expressions = [self.try_to_parse_relative_expression()]
+        operators = []
+
+        while self.lexer.current_token.type in [TokenType.EQ,
+                                                TokenType.NEQ]:
+            operators.append(self.lexer.current_token.type)
+            self.lexer.build_next_token()
+            relative_expressions.append(self.try_to_parse_relative_expression())
+
+        return EqualityExpression(relative_expressions, operators)
+
+    def try_to_parse_relative_expression(self):
+        arithmetic_expressions = [self.try_to_parse_arithmetic_expression()]
+        operators = []
+
+        while self.lexer.current_token.type in [TokenType.LEQ,
+                                                TokenType.LESS,
+                                                TokenType.GEQ,
+                                                TokenType.GRE]:
+            operators.append(self.lexer.current_token.type)
+            self.lexer.build_next_token()
+            arithmetic_expressions.append(self.try_to_parse_arithmetic_expression())
+
+        return RelativeExpression(arithmetic_expressions, operators)
+
+    def try_to_parse_arithmetic_expression(self):
+        terms = [self.try_to_parse_term()]
+        operators = []
+
+        while self.lexer.current_token.type in [TokenType.PLUS,
+                                                TokenType.MINUS]:
+            operators.append(self.lexer.current_token.type)
+            self.lexer.build_next_token()
+            terms.append(self.try_to_parse_term())
+
+        return ArithmeticExpression(terms, operators)
+
+    def try_to_parse_term(self):
+        miniterms = [self.try_to_parse_miniterm()]
         used_operators = []
 
-        while self.lexer.current_token.type in operators:
+        while self.lexer.current_token.type in [TokenType.MUL,
+                                                TokenType.FLOAT_DIV,
+                                                TokenType.INTEGER_DIV,
+                                                TokenType.MODULO]:
             used_operators.append(self.lexer.current_token.type)
             self.lexer.build_next_token()
-            subexpressions.append(self._generic_parser(SubExpressionClass))
+            miniterms.append(self.try_to_parse_miniterm())
 
-        return ExpressionClass(subexpressions, used_operators)
-
-    # def try_to_parse_condition_expression(self):
-    #     and_expressions = [self.try_to_parse_andExpression()]
-    #
-    #     while self.lexer.current_token.type == TokenType.OR:
-    #         self.lexer.build_next_token()
-    #         and_expressions.append(self.try_to_parse_andExpression())
-    #
-    #     return ConditionExpression(and_expressions)
-    #
-    # def try_to_parse_andExpression(self):
-    #     equality_expressions = [self.try_to_parse_equality_expression()]
-    #
-    #     while self.lexer.current_token.type == TokenType.AND:
-    #         self.lexer.build_next_token()
-    #         equality_expressions.append(self.try_to_parse_equality_expression())
-    #
-    #     return AndExpression(equality_expressions)
-    #
-    # def try_to_parse_equality_expression(self):
-    #     relative_expressions = [self.try_to_parse_relative_expression()]
-    #     operators = []
-    #
-    #     while self.lexer.current_token.type in [TokenType.EQ,
-    #                                             TokenType.NEQ]:
-    #         operators.append(self.lexer.current_token.type)
-    #         self.lexer.build_next_token()
-    #         relative_expressions.append(self.try_to_parse_relative_expression())
-    #
-    #     return EqualityExpression(relative_expressions, operators)
-    #
-    # def try_to_parse_relative_expression(self):
-    #     arithmetic_expressions = [self.try_to_parse_arithmetic_expression()]
-    #     operators = []
-    #
-    #     while self.lexer.current_token.type in [TokenType.LEQ,
-    #                                             TokenType.LESS,
-    #                                             TokenType.GEQ,
-    #                                             TokenType.GRE]:
-    #         operators.append(self.lexer.current_token.type)
-    #         self.lexer.build_next_token()
-    #         arithmetic_expressions.append(self.try_to_parse_arithmetic_expression())
-    #
-    #     return RelativeExpression(arithmetic_expressions, operators)
-    #
-    # def try_to_parse_arithmetic_expression(self):
-    #     terms = [self.try_to_parse_term()]
-    #     operators = []
-    #
-    #     while self.lexer.current_token.type in [TokenType.PLUS,
-    #                                             TokenType.MINUS]:
-    #         operators.append(self.lexer.current_token.type)
-    #         self.lexer.build_next_token()
-    #         terms.append(self.try_to_parse_term())
-    #
-    #     return ArithmeticExpression(terms, operators)
-
+        return Term(miniterms, used_operators)
 
     def try_to_parse_miniterm(self):
         # todo Refactor of names 'parse' and 'try to parse'
