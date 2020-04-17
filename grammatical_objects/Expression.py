@@ -2,7 +2,7 @@ from Token import TokenType
 
 
 class Expression:
-    def __init__(self, subexpressions, used_operators):
+    def __init__(self, subexpressions, used_operators=None):
         self.subexpressions = subexpressions
         self.operators = used_operators
 
@@ -80,16 +80,33 @@ subexpressions_and_binary_operators = {
 
 
 class MicroTerm:
-    pass
-
+    def __init__(self, base, power):
+        self.base = base
+        self.power = power
 
 class Factor:
     pass
 
 
 class FunctionCall:
-    pass
+    def __init__(self, id, argument_list):
+        self.id = id
+        self.argument_list = argument_list
+
+
+class Identifier:
+    def __init__(self, id):
+        self.id = id
 
 
 class MatrixSubscripting:
-    pass
+    def __init__(self, id, idx, idx2):
+        self.id = id
+        self.row_index = idx
+        self.column_index = idx2
+
+
+class MatrixIndex:
+    def __init__(self, expression, is_full_index=False):
+        self.expression = expression
+        self.is_full_index = is_full_index
