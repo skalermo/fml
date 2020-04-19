@@ -4,32 +4,12 @@ from Position import Position
 
 
 class Lexer:
-    # Static variables
+    # Static variable
     MAX_ID_LENGTH = 128
-    _building_methods = []
-    _similar_token_types = []
-
-    @classmethod
-    def set_static_vars(cls):
-        cls._building_methods.extend([
-            cls.try_to_build_scalar,
-            cls.try_to_build_id,
-            cls.try_to_build_string,
-            cls.try_to_build_similar_tokens,
-            cls.try_to_build_neq,  # not equal (!=) token
-            cls.try_to_build_single_char_token
-        ])
-        cls._similar_token_types.extend([
-            (TokenType.MUL, TokenType.POW),
-            (TokenType.LESS, TokenType.LEQ),
-            (TokenType.GRE, TokenType.GEQ),
-            (TokenType.ASSIGN, TokenType.EQ)
-        ])
 
     def __init__(self, source):
         self.current_token = None
         self.source = source
-        self.set_static_vars()
         self.build_next_token()
 
     def build_next_token(self):
@@ -38,7 +18,12 @@ class Lexer:
 
         position = Position(self.source)
 
-        for try_to_build_token in Lexer._building_methods:
+        for try_to_build_token in [self.try_to_build_scalar,
+                                   self.try_to_build_id,
+                                   self.try_to_build_string,
+                                   self.try_to_build_similar_tokens,
+                                   self.try_to_build_neq,
+                                   self.try_to_build_single_char_token]:
             if token := try_to_build_token(self):
                 token.position = position
                 self.current_token = token
@@ -179,7 +164,10 @@ class Lexer:
         )
 
     def try_to_build_similar_tokens(self):
-        for type_1char, type_2chars in Lexer._similar_token_types:
+        for type_1char, type_2chars in [(TokenType.MUL, TokenType.POW),
+                                        (TokenType.LESS, TokenType.LEQ),
+                                        (TokenType.GRE, TokenType.GEQ),
+                                        (TokenType.ASSIGN, TokenType.EQ)]:
             if token := self._generic_builder(type_1char, type_2chars):
                 return token
         return None
