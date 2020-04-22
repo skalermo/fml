@@ -24,7 +24,7 @@ class Lexer:
                                    self.try_to_build_similar_tokens,
                                    self.try_to_build_neq,
                                    self.try_to_build_single_char_token]:
-            if token := try_to_build_token(self):
+            if token := try_to_build_token():
                 token.position = position
                 self.current_token = token
                 return
