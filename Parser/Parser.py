@@ -4,7 +4,6 @@ from Lexer.Token import TokenType
 from Parser.Objects.Program import Program
 from Parser.Objects.Function import *
 from Parser.Objects.Statement import *
-from Parser.Objects.Expression import *
 from Parser.Objects.Identifier import *
 from Parser.Objects.String import *
 from Parser.Objects.Matrix import *
@@ -204,8 +203,10 @@ class Parser:
         #   id = expression;
         #   expression;
         #
-        if lvalue := self.try_to_parse_id() is None:
-            return self.try_to_parse_condition_expression()
+        # if lvalue := self.try_to_parse_id() is None:
+        #     return self.try_to_parse_condition_expression()
+
+        lvalue = self.try_to_parse_condition_expression()
 
         if self.lexer.current_token.type != TokenType.ASSIGN:
             return lvalue
@@ -241,7 +242,7 @@ class Parser:
         lvalue = self.try_to_parse_relative_expression()
 
         if self.lexer.current_token.type not in [TokenType.EQ,
-                                            TokenType.NEQ]:
+                                                 TokenType.NEQ]:
             return lvalue
 
         op = self.lexer.current_token
@@ -290,11 +291,12 @@ class Parser:
         return BinaryOperator(lvalue, op, self.try_to_parse_term())
 
     def try_to_parse_miniterm(self):
-        op = TokenType.PLUS
-        if self.lexer.current_token.type in [TokenType.PLUS,
-                                             TokenType.MINUS,
-                                             TokenType.NOT]:
-            op = self.lexer.current_token
+        if self.lexer.current_token.type not in [TokenType.PLUS,
+                                                 TokenType.MINUS,
+                                                 TokenType.NOT]:
+            return self.try_to_parse_microterm()
+
+        op = self.lexer.current_token
         return UnaryOperator(op, self.try_to_parse_microterm())
 
     def try_to_parse_microterm(self):
@@ -343,7 +345,7 @@ class Parser:
     def try_to_parse_scalar(self):
         if self.lexer.current_token.type != TokenType.SCALAR:
             return None
-        scalar = Scalar(self.lexer.current_token())
+        scalar = Scalar(self.lexer.current_token)
         self.lexer.build_next_token()
         return scalar
 
@@ -378,6 +380,8 @@ class Parser:
         while self.lexer.current_token.type == TokenType.COMMA:
             self.lexer.build_next_token()
             argument_list.append(self.try_to_parse_expression())
+
+        self.expect(TokenType.RPAREN)
 
         return FunctionCall(id, argument_list)
 
