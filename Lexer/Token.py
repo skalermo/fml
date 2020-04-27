@@ -18,6 +18,13 @@ class TokenType(Enum):
     WHILE = 'while'
 
     # single-character token types
+    ETX = '\x03'
+    LPAREN = '('
+    RPAREN = ')'
+    LBRACK = '['
+    RBRACK = ']'
+    LCURB = '{'
+    RCURB = '}'
     SEMI = ';'
     COMMA = ','
     COLON = ':'
@@ -26,13 +33,8 @@ class TokenType(Enum):
     MUL = '*'
     FLOAT_DIV = '/'
     ASSIGN = '='
-    LPAREN = '('
-    RPAREN = ')'
-    LBRACK = '['
-    RBRACK = ']'
     LESS = '<'
     GRE = '>'
-    ETX = '\x03'
 
     # other types
     LEQ = '<='
@@ -66,8 +68,10 @@ RESERVED_KEYWORDS = _build_reserved_keywords()
 
 
 class Token:
-    def __init__(self, type, value, position=None):
+    def __init__(self, type, value=None, position=None):
         self.type = type
+        if value is None:
+            value = type.value
         self.value = value
         self.position = position
 
