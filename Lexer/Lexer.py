@@ -1,6 +1,6 @@
-from Token import TokenType, Token, RESERVED_KEYWORDS
+from Lexer.Token import TokenType, Token, RESERVED_KEYWORDS
 from Error import LexerError, ErrorCode
-from Position import Position
+from Source.Position import Position
 
 
 class Lexer:

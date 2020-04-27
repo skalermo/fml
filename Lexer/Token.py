@@ -18,6 +18,13 @@ class TokenType(Enum):
     WHILE = 'while'
 
     # single-character token types
+    ETX = '\x03'
+    LPAREN = '('
+    RPAREN = ')'
+    LBRACK = '['
+    RBRACK = ']'
+    LCURB = '{'
+    RCURB = '}'
     SEMI = ';'
     COMMA = ','
     COLON = ':'
@@ -26,15 +33,8 @@ class TokenType(Enum):
     MUL = '*'
     FLOAT_DIV = '/'
     ASSIGN = '='
-    LPAREN = '('
-    RPAREN = ')'
-    LBRACK = '['
-    RBRACK = ']'
-    LCURB = '{'
-    RCURB = '}'
     LESS = '<'
     GRE = '>'
-    ETX = '\x03'
 
     # other types
     LEQ = '<='

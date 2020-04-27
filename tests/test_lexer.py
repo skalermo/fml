@@ -1,7 +1,7 @@
 import unittest
-from Lexer import Lexer
-from Token import TokenType, Token, RESERVED_KEYWORDS
-from Source import FileSource, StringSource
+from Lexer.Lexer import Lexer
+from Lexer.Token import TokenType, Token, RESERVED_KEYWORDS
+from Source.Source import FileSource, StringSource
 from Error import LexerError, ErrorCode
 
 
