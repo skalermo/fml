@@ -38,3 +38,7 @@ class IfStatement(Statement):
 class CompoundStatement(Statement):
     def __init__(self, statement_list):
         self.statement_list = statement_list
+
+
+class EmptyStatement(Statement):
+    pass

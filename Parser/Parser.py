@@ -80,6 +80,15 @@ class Parser:
 
     def try_to_parse_statement(self):
         self.lexer.source.update_context_start()
+
+        for try_to_parse_statement in [self.try_to_parse_while_loop,
+                                       self.try_to_parse_for_loop,
+                                       self.try_to_parse_if_statement,
+                                       self.try_to_parse_compound_statement,
+                                       self.try_to_parse_ret_statement]:
+            if statement := try_to_parse_statement():
+                return statement
+
         #
         # Handle do_while_loop and (return)expression
         # apart from other statements
@@ -92,14 +101,8 @@ class Parser:
                 self.expect(TokenType.SEMI)
                 return statement
 
-        for try_to_parse_statement in [self.try_to_parse_while_loop,
-                                       self.try_to_parse_for_loop,
-                                       self.try_to_parse_if_statement,
-                                       self.try_to_parse_compound_statement,
-                                       self.try_to_parse_ret_statement]:
-            if statement := try_to_parse_statement():
-                return statement
-        return None
+        self.expect(TokenType.SEMI)
+        return EmptyStatement()
 
     def try_to_parse_do_while_loop(self):
         if self.lexer.current_token.type != TokenType.DO:
@@ -121,6 +124,7 @@ class Parser:
     def try_to_parse_while_loop(self):
         if self.lexer.current_token.type != TokenType.WHILE:
             return None
+        self.lexer.build_next_token()
 
         self.expect(TokenType.LPAREN)
 
