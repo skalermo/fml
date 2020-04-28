@@ -51,7 +51,7 @@ class LexerTest(unittest.TestCase):
             Token(TokenType.ETX)
         ]
 
-        file_source = FileSource('tokens/all_tokens.txt')
+        file_source = FileSource('lexer/tokens/all_tokens.txt')
         lexer = Lexer(file_source)
         for expected_token in tokens:
             token = lexer.current_token
@@ -120,6 +120,39 @@ class LexerTest(unittest.TestCase):
         # should fail
         with self.assertRaises(LexerError):
             Lexer(StringSource(string))
+
+    def test_double_char_operators(self):
+        string = '<= > <= < < >= = < > >= < <= <= < >= <= >= >= != > >='
+        tokens = [
+            Token(TokenType.LEQ),
+            Token(TokenType.GRE),
+            Token(TokenType.LEQ),
+            Token(TokenType.LESS),
+            Token(TokenType.LESS),
+            Token(TokenType.GEQ),
+            Token(TokenType.ASSIGN),
+            Token(TokenType.LESS),
+            Token(TokenType.GRE),
+            Token(TokenType.GEQ),
+            Token(TokenType.LESS),
+            Token(TokenType.LEQ),
+            Token(TokenType.LEQ),
+            Token(TokenType.LESS),
+            Token(TokenType.GEQ),
+            Token(TokenType.LEQ),
+            Token(TokenType.GEQ),
+            Token(TokenType.GEQ),
+            Token(TokenType.NEQ),
+            Token(TokenType.GRE),
+            Token(TokenType.GEQ)
+        ]
+        lexer = Lexer(StringSource(string))
+
+        for expected_token in tokens:
+            token = lexer.current_token
+            self.assertEqual(expected_token.type, token.type)
+            self.assertEqual(expected_token.value, token.value)
+            lexer.build_next_token()
 
 
 if __name__ == '__main__':
