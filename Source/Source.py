@@ -25,7 +25,7 @@ class Source:
 
         if self.current_char == '\n':
             self.line += 1
-            self.column = 1
+            self.column = 0
 
     def update_context_start(self):
         self._last_context_start_pos = self._current_pos
