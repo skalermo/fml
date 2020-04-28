@@ -14,7 +14,7 @@ from Parser.Objects.Operators import *
 class Parser:
     def __init__(self, lexer):
         self.lexer = lexer
-        self.program = self.parse_program()
+        # self.program = self.parse_program()
 
     def expect(self, expected_token_type):
         if self.lexer.current_token.type != expected_token_type:
@@ -33,9 +33,9 @@ class Parser:
     def try_to_parse_fun_definition(self):
         if self.lexer.current_token.type != TokenType.FUN:
             return None
-        self.lexer.source.update_context_start()
-
         self.lexer.build_next_token()
+
+        self.lexer.source.update_context_start(self.lexer.current_token.position.pos)
 
         if self.lexer.current_token.type != TokenType.ID:
             self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
@@ -79,7 +79,7 @@ class Parser:
         return parameter_list
 
     def try_to_parse_statement(self):
-        self.lexer.source.update_context_start()
+        self.lexer.source.update_context_start(self.lexer.current_token.position.pos)
 
         for try_to_parse_statement in [self.try_to_parse_while_loop,
                                        self.try_to_parse_for_loop,
@@ -220,7 +220,10 @@ class Parser:
         op = self.lexer.current_token
         self.lexer.build_next_token()
 
-        return BinaryOperator(lvalue, op, self.try_to_parse_condition_expression())
+        if (rvalue := self.try_to_parse_expression()) is None:
+            self.error(error_code=ErrorCode.RVAL_FAIL)
+        return BinaryOperator(lvalue, op, rvalue)
+                                            # allow nested assignments
 
     def try_to_parse_condition_expression(self):
         lvalue = self.try_to_parse_andExpression()
@@ -231,7 +234,9 @@ class Parser:
         op = self.lexer.current_token
         self.lexer.build_next_token()
 
-        return BinaryOperator(lvalue, op, self.try_to_parse_condition_expression())
+        if (rvalue := self.try_to_parse_condition_expression()) is None:
+            self.error(error_code=ErrorCode.RVAL_FAIL)
+        return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_andExpression(self):
         lvalue = self.try_to_parse_equality_expression()
@@ -242,7 +247,9 @@ class Parser:
         op = self.lexer.current_token
         self.lexer.build_next_token()
 
-        return BinaryOperator(lvalue, op, self.try_to_parse_condition_expression())
+        if (rvalue := self.try_to_parse_andExpression()) is None:
+            self.error(error_code=ErrorCode.RVAL_FAIL)
+        return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_equality_expression(self):
         lvalue = self.try_to_parse_relative_expression()
@@ -254,7 +261,9 @@ class Parser:
         op = self.lexer.current_token
         self.lexer.build_next_token()
 
-        return BinaryOperator(lvalue, op, self.try_to_parse_equality_expression())
+        if (rvalue := self.try_to_parse_equality_expression()) is None:
+            self.error(error_code=ErrorCode.RVAL_FAIL)
+        return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_relative_expression(self):
         lvalue = self.try_to_parse_arithmetic_expression()
@@ -268,7 +277,9 @@ class Parser:
         op = self.lexer.current_token
         self.lexer.build_next_token()
 
-        return BinaryOperator(lvalue, op, self.try_to_parse_relative_expression())
+        if (rvalue := self.try_to_parse_relative_expression()) is None:
+            self.error(error_code=ErrorCode.RVAL_FAIL)
+        return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_arithmetic_expression(self):
         lvalue = self.try_to_parse_term()
@@ -280,7 +291,9 @@ class Parser:
         op = self.lexer.current_token
         self.lexer.build_next_token()
 
-        return BinaryOperator(lvalue, op, self.try_to_parse_arithmetic_expression())
+        if (rvalue := self.try_to_parse_arithmetic_expression()) is None:
+            self.error(error_code=ErrorCode.RVAL_FAIL)
+        return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_term(self):
         lvalue = self.try_to_parse_miniterm()
@@ -294,7 +307,9 @@ class Parser:
         op = self.lexer.current_token
         self.lexer.build_next_token()
 
-        return BinaryOperator(lvalue, op, self.try_to_parse_term())
+        if (rvalue := self.try_to_parse_term()) is None:
+            self.error(error_code=ErrorCode.RVAL_FAIL)
+        return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_miniterm(self):
         if self.lexer.current_token.type not in [TokenType.PLUS,
@@ -313,7 +328,9 @@ class Parser:
         op = self.lexer.current_token
         self.lexer.build_next_token()
 
-        return BinaryOperator(lvalue, op, self.try_to_parse_factor())
+        if (rvalue := self.try_to_parse_factor()) is None:
+            self.error(error_code=ErrorCode.RVAL_FAIL)
+        return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_factor(self):
         for try_to_parse_factor in [self.try_to_parse_constant,
@@ -430,16 +447,3 @@ class Parser:
             source_type=self.lexer.source.get_source_type(),
             token=self.lexer.current_token.value
         )
-
-    # def try_to_parse_assignment(self, id):
-    #     if self.lexer.current_token.type != TokenType.EQ:
-    #         return None
-    #     self.lexer.build_next_token()
-    #
-    #     lhs = Identifier(id.value)
-    #
-    #     for try_to_parse_assignment in [self.try_to_parse_string,
-    #                                     self.try_to_parse_condition_expression]:
-    #         if rhs := try_to_parse_assignment():
-    #             return Assignment(lhs, rhs)
-    #     return None
