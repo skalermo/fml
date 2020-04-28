@@ -49,7 +49,7 @@ class Parser:
 
         self.expect(TokenType.RPAREN)
 
-        if statement := self.try_to_parse_statement() is None:
+        if (statement := self.try_to_parse_statement()) is None:
             self.error(error_code=ErrorCode.EXPECTED_STATEMENT)
 
         return FunctionDefinition(fun_id, parameter_list, statement)
@@ -101,8 +101,10 @@ class Parser:
                 self.expect(TokenType.SEMI)
                 return statement
 
-        self.expect(TokenType.SEMI)
-        return EmptyStatement()
+        if self.lexer.current_token.type == TokenType.SEMI:
+            self.lexer.build_next_token()
+            return EmptyStatement()
+        return None
 
     def try_to_parse_do_while_loop(self):
         if self.lexer.current_token.type != TokenType.DO:
@@ -179,7 +181,7 @@ class Parser:
         return IfStatement(condition_expression, statement, else_statement)
 
     def try_to_parse_compound_statement(self):
-        if self.lexer.current_token != TokenType.LCURB:
+        if self.lexer.current_token.type != TokenType.LCURB:
             return None
         self.lexer.build_next_token()
 
@@ -218,7 +220,7 @@ class Parser:
         op = self.lexer.current_token
         self.lexer.build_next_token()
 
-        return BinaryOperator(lvalue, op, self.try_to_parse_expression())
+        return BinaryOperator(lvalue, op, self.try_to_parse_condition_expression())
 
     def try_to_parse_condition_expression(self):
         lvalue = self.try_to_parse_andExpression()
@@ -329,7 +331,7 @@ class Parser:
         return None
 
     def try_to_parse_non_constant(self):
-        if id := self.try_to_parse_id() is None:
+        if (id := self.try_to_parse_id()) is None:
             return None
 
         for parse_method in [self.try_to_parse_function_call,
@@ -421,14 +423,12 @@ class Parser:
         return MatrixRow(expressions)
 
     def error(self, error_code=None):
-        s = 'line: {position.line} column: {position.column}'.format(
-            position=Position(self.lexer.source)
-        )
         raise ParserError(
             error_code=error_code,
-            message=s,
-            token=self.lexer.current_token,
-            context=self.lexer.source.get_last_context()
+            position=Position(self.lexer.source),
+            context=self.lexer.source.get_last_context(),
+            source_type=self.lexer.source.get_source_type(),
+            token=self.lexer.current_token.value
         )
 
     # def try_to_parse_assignment(self, id):
