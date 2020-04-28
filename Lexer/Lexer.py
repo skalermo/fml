@@ -208,8 +208,17 @@ class Lexer:
             return Token(type=token_type)
 
     def error(self, error_code=None):
-        s = "'{lexeme}' line: {position.line} column: {position.column}".format(
-            lexeme=self.source.current_char,
-            position=Position(self.source)
+        raise LexerError(
+            error_code=error_code,
+            position=Position(self.source),
+            context=self.source.get_last_context(),
+            source_type=self.source.get_source_type(),
+            token=self.current_token
         )
-        raise LexerError(error_code=error_code, message=s)
+
+    # def error(self, error_code=None):
+    #     s = "'{lexeme}' line: {position.line} column: {position.column}".format(
+    #         lexeme=self.source.current_char,
+    #         position=Position(self.source)
+    #     )
+    #     raise LexerError(error_code=error_code, message=s)
