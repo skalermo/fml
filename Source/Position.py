@@ -2,7 +2,7 @@ class Position:
     def __init__(self, source):
         self.line = source.line
         self.column = source.column
-        # self._pos = source.pos
+        self.pos = source.current_pos
 
     def __str__(self):
         return f'position=[{self.line}:{self.column}]'
