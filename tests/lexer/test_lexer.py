@@ -154,6 +154,14 @@ class LexerTest(unittest.TestCase):
             self.assertEqual(expected_token.value, token.value)
             lexer.build_next_token()
 
+    # def test_fail(self):
+    #     string = 'a + b; ' \
+    #              'a -' \
+    #              ' a;$'
+    #     lexer = Lexer(StringSource(string))
+    #     while (token := lexer.current_token) != TokenType.ETX:
+    #         lexer.build_next_token()
+
 
 if __name__ == '__main__':
     unittest.main()
