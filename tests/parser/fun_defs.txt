@@ -1,7 +1,13 @@
+for (in [a, b, c]);
+
+fun some_function(,);
+
 fun dumb();
 
-fun dumb2()
+fun dumb2()a
     ;;;;
+
+fun dumb3(){}
 
 fun get_1_arg_and_do_nothing(a)
     a;

@@ -14,6 +14,10 @@ class TestExpressionsFails(unittest.TestCase):
         if expected_error_code is not None:
             tester.assertEqual(expected_error_code, e.exception.error_code)
 
+    def test_rvalue_assignment(self):
+        expr = 'a =;'
+        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+
     def test_rvalue_or_expr(self):
         expr = '-3 + 3 or;'
         TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
@@ -71,9 +75,6 @@ class TestExpressionsFails(unittest.TestCase):
     def test_rvalue_microterm(self):
         expr = 'a = b **;'
         TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
-
-
-
 
 
 if __name__ == '__main__':
