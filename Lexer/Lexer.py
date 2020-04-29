@@ -138,7 +138,7 @@ class Lexer:
 
         while self.source.current_char != '"':
             # string hasn't been finished, ETX appeared
-            if self.source.current_char != TokenType.ETX.value:
+            if self.source.current_char == TokenType.ETX.value:
                 self.error(error_code=ErrorCode.TOKEN_BUILD_FAIL)
 
             # if current char is '\'
@@ -213,7 +213,6 @@ class Lexer:
             position=Position(self.source),
             context=self.source.get_last_context(),
             source_type=self.source.get_source_type(),
-            token=self.current_token
         )
 
     # def error(self, error_code=None):
