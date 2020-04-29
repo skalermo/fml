@@ -18,8 +18,10 @@ class Parser:
 
     def expect(self, expected_token_type):
         if self.lexer.current_token.type != expected_token_type:
-            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN, expected=expected_token_type)
+        # prev_token = self.lexer.current_token
         self.lexer.build_next_token()
+        # return prev_token
 
     def parse_program(self):
         toplevel_objects = []
@@ -33,12 +35,11 @@ class Parser:
     def try_to_parse_fun_definition(self):
         if self.lexer.current_token.type != TokenType.FUN:
             return None
+        self.lexer.source.update_context_start(self.lexer.current_token.position.pos)
         self.lexer.build_next_token()
 
-        self.lexer.source.update_context_start(self.lexer.current_token.position.pos)
-
         if self.lexer.current_token.type != TokenType.ID:
-            self.error(error_code=ErrorCode.UNEXPECTED_TOKEN)
+            self.error(error_code=ErrorCode.EXPECTED_ID)
 
         fun_id = self.lexer.current_token.value
         self.lexer.build_next_token()
@@ -190,6 +191,8 @@ class Parser:
         while statement := self.try_to_parse_statement():
             statement_list.append(statement)
 
+        if len(statement_list) == 0:
+            self.error(ErrorCode.EXPECTED_STATEMENT)
         self.expect(TokenType.RCURB)
 
         return CompoundStatement(statement_list)
@@ -204,14 +207,6 @@ class Parser:
         return ReturnStatement(expression)
 
     def try_to_parse_expression(self):
-        #
-        # It could be either of these:
-        #   id = expression;
-        #   expression;
-        #
-        # if lvalue := self.try_to_parse_id() is None:
-        #     return self.try_to_parse_condition_expression()
-
         lvalue = self.try_to_parse_condition_expression()
 
         if self.lexer.current_token.type != TokenType.ASSIGN:
@@ -220,10 +215,10 @@ class Parser:
         op = self.lexer.current_token
         self.lexer.build_next_token()
 
+                        # allow nested assignments
         if (rvalue := self.try_to_parse_expression()) is None:
             self.error(error_code=ErrorCode.RVAL_FAIL)
         return BinaryOperator(lvalue, op, rvalue)
-                                            # allow nested assignments
 
     def try_to_parse_condition_expression(self):
         lvalue = self.try_to_parse_andExpression()
@@ -439,11 +434,11 @@ class Parser:
 
         return MatrixRow(expressions)
 
-    def error(self, error_code=None):
+    def error(self, error_code=None, expected=None):
         raise ParserError(
             error_code=error_code,
-            position=Position(self.lexer.source),
+            position=self.lexer.current_token.position,
             context=self.lexer.source.get_last_context(),
             source_type=self.lexer.source.get_source_type(),
-            token=self.lexer.current_token.value
+            expected_val=expected
         )
