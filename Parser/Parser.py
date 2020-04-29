@@ -157,16 +157,21 @@ class Parser:
 
         self.expect(TokenType.LPAREN)
 
-        condition_expression = self.try_to_parse_condition_expression()
+        if (condition_expression := self.try_to_parse_condition_expression()) is None:
+            self.error(error_code=ErrorCode.EMPTY_COND)
 
         self.expect(TokenType.RPAREN)
 
-        statement = self.try_to_parse_statement()
+        if (statement := self.try_to_parse_statement()) is None:
+            self.error(error_code=ErrorCode.EXPECTED_STATEMENT)
+
         else_statement = None
 
         if self.lexer.current_token.type == TokenType.ELSE:
             self.lexer.build_next_token()
-            else_statement = self.try_to_parse_statement()
+
+            if (else_statement := self.try_to_parse_statement()) is None:
+                self.error(error_code=ErrorCode.EXPECTED_STATEMENT)
 
         return IfStatement(condition_expression, statement, else_statement)
 
