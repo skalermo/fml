@@ -352,6 +352,7 @@ class Parser:
             return None
         self.lexer.build_next_token()
 
+        # maybe be brackets with no expression
         expression = self.try_to_parse_expression()
         self.expect(TokenType.RPAREN)
         return expression
@@ -415,11 +416,14 @@ class Parser:
         self.lexer.build_next_token()
 
         idx = self.try_to_parse_index()
+
         idx2 = None
-        if self.lexer.current_token == TokenType.COMMA:
+        if self.lexer.current_token.type == TokenType.COMMA:
             self.lexer.build_next_token()
 
             idx2 = self.try_to_parse_index()
+
+        self.expect(TokenType.RBRACK)
         return MatrixSubscripting(token_id, idx, idx2)
 
     def try_to_parse_index(self):
@@ -427,7 +431,10 @@ class Parser:
             self.lexer.build_next_token()
 
             return MatrixIndex(None, True)
-        return MatrixIndex(self.try_to_parse_expression())
+
+        if (expression := self.try_to_parse_expression()) is None:
+            self.error(error_code=ErrorCode.EXPECTED_EXPRESSION)
+        return MatrixIndex(expression)
 
     def try_to_parse_string(self):
         if self.lexer.current_token.type != TokenType.STRING:
