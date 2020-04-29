@@ -26,6 +26,7 @@ class Source:
         if self.current_char == '\n':
             self.line += 1
             self.column = 0
+            self.update_context_start(self.current_pos+1)
 
     def update_context_start(self, token_pos):
         self._last_context_start_pos = token_pos
@@ -77,7 +78,7 @@ class StringSource(Source):
 
     def get_last_context(self):
         offset = self.current_pos - self._last_context_start_pos
-        return self._string[-offset-1:]
+        return self._string[-offset:]
 
     def get_source_type(self):
         return "<string>"
