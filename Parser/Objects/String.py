@@ -1,3 +1,3 @@
 class String:
-    def __init__(self, token):
-        self.token = token
+    def __init__(self, token_string):
+        self.token_string = token_string

@@ -12,8 +12,8 @@ class ReturnStatement(Statement):
 
 
 class ForLoop(Statement):
-    def __init__(self, var, iterable, statement):
-        self.var = var
+    def __init__(self, token_iterator, iterable, statement):
+        self.token_iterator = token_iterator
         self.iterable = iterable
         self.statement = statement
 

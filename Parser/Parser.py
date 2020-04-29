@@ -130,7 +130,7 @@ class Parser:
 
         self.expect(TokenType.LPAREN)
 
-        iterator = self.expect(TokenType.ID)
+        token_iterator = self.expect(TokenType.ID)
 
         self.expect(TokenType.IN)
 
@@ -142,7 +142,7 @@ class Parser:
         self.expect(TokenType.RPAREN)
 
         statement = self.try_to_parse_statement()
-        return ForLoop(iterator, iterable, statement)
+        return ForLoop(token_iterator, iterable, statement)
 
     def try_to_parse_if_statement(self):
         if self.lexer.current_token.type != TokenType.IF:
@@ -371,26 +371,28 @@ class Parser:
     def try_to_parse_id(self):
         if self.lexer.current_token.type != TokenType.ID:
             return None
-        id = self.lexer.current_token.value
+        token_id = self.lexer.current_token
         self.lexer.build_next_token()
 
-        return Identifier(id)
+        return Identifier(token_id)
 
-    def try_to_parse_function_call(self, id):
+    def try_to_parse_function_call(self, token_id):
         if self.lexer.current_token.type != TokenType.LPAREN:
             return None
         self.lexer.build_next_token()
+
         argument_list = [self.try_to_parse_expression()]
 
         while self.lexer.current_token.type == TokenType.COMMA:
             self.lexer.build_next_token()
+
             argument_list.append(self.try_to_parse_expression())
 
         self.expect(TokenType.RPAREN)
 
-        return FunctionCall(id, argument_list)
+        return FunctionCall(token_id, argument_list)
 
-    def try_to_parse_matrix_subscripting(self, id):
+    def try_to_parse_matrix_subscripting(self, token_id):
         if self.lexer.current_token.type != TokenType.LBRACK:
             return None
         self.lexer.build_next_token()
@@ -401,7 +403,7 @@ class Parser:
             self.lexer.build_next_token()
 
             idx2 = self.try_to_parse_index()
-        return MatrixSubscripting(id, idx, idx2)
+        return MatrixSubscripting(token_id, idx, idx2)
 
     def try_to_parse_index(self):
         if self.lexer.current_token.type == TokenType.COLON:
@@ -413,7 +415,10 @@ class Parser:
     def try_to_parse_string(self):
         if self.lexer.current_token.type != TokenType.STRING:
             return None
-        return String(self.lexer.current_token)
+        token_string = self.lexer.current_token
+        self.lexer.build_next_token()
+
+        return String(token_string)
 
     def try_to_parse_matrix_row(self):
         expressions = [self.try_to_parse_expression()]
