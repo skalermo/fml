@@ -6,7 +6,7 @@ from tests.parser.utils import should_fail
 
 class TestMatrixFails(unittest.TestCase):
     def test_rbrack_missing(self):
-        m = '[;'
+        m = '['
         should_fail(self, m, ErrorCode.UNEXPECTED_TOKEN, TokenType.RBRACK)
 
     def test_comma_missing(self):

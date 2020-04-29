@@ -137,17 +137,21 @@ class Parser:
 
         self.expect(TokenType.IN)
 
-        for parse_iterable in [self.try_to_parse_id,
-                               self.try_to_parse_matrix,
-                               self.try_to_parse_string]:
-            iterable = parse_iterable()
-        if iterable is None:
+        if (iterable := self.try_to_parse_iterable()) is None:
             self.error(error_code=ErrorCode.EXPECTED_ITERABLE)
 
         self.expect(TokenType.RPAREN)
 
         statement = self.try_to_parse_statement()
         return ForLoop(token_iterator, iterable, statement)
+
+    def try_to_parse_iterable(self):
+        for parse_iterable in [self.try_to_parse_id,
+                               self.try_to_parse_matrix,
+                               self.try_to_parse_string]:
+            if (iterable := parse_iterable()) is not None:
+                return iterable
+        return None
 
     def try_to_parse_if_statement(self):
         if self.lexer.current_token.type != TokenType.IF:

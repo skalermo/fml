@@ -51,7 +51,7 @@ class LexerTest(unittest.TestCase):
             Token(TokenType.ETX)
         ]
 
-        file_source = FileSource('lexer/tokens/all_tokens.txt')
+        file_source = FileSource('tokens/all_tokens.txt')
         lexer = Lexer(file_source)
         for expected_token in tokens:
             token = lexer.current_token
