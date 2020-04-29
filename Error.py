@@ -15,15 +15,16 @@ class ErrorCode:
 
     UNEXPECTED_TOKEN = 'Unexpected token'
     EXPECTED_STATEMENT = 'Expected statement'
+    EXPECTED_EXPRESSION = 'Expected expression'
     EXPECTED_ID = 'Expected identifier'
     EXPECTED_SEMI = 'Expected semicolon'
     EXPECTED_ITERABLE = 'Expected iterable'
+    EMPTY_COND = 'Condition is empty'
     EXPECTED_MTRX_ROW = 'Expected matrix row'
     EXPECTED_MTRX_ITEM = 'Expected matrix item'
 
     MTRX_ROW_LEN_MISMATCH = 'Matrix should have rows of the same length'
     RVAL_FAIL = 'Expected rvalue'
-    EMPTY_COND = 'Condition is empty'
 
     ID_NOT_FOUND = 'Identifier not found'
     DUPLICATE_ID = 'Duplicate id found'
