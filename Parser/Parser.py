@@ -97,7 +97,8 @@ class Parser:
             return None
         self.lexer.build_next_token()
 
-        statement = self.try_to_parse_statement()
+        if (statement := self.try_to_parse_statement()) is None:
+            self.error(error_code=ErrorCode.EXPECTED_STATEMENT)
 
         self.expect(TokenType.WHILE)
 
@@ -116,11 +117,14 @@ class Parser:
 
         self.expect(TokenType.LPAREN)
 
-        condition_expression = self.try_to_parse_condition_expression()
+        if (condition_expression := self.try_to_parse_condition_expression()) is None:
+            self.error(error_code=ErrorCode.EMPTY_COND)
 
         self.expect(TokenType.RPAREN)
 
-        statement = self.try_to_parse_statement()
+        if (statement := self.try_to_parse_statement()) is None:
+            self.error(error_code=ErrorCode.EXPECTED_STATEMENT)
+
         return WhileLoop(statement, condition_expression)
 
     def try_to_parse_for_loop(self):
@@ -138,6 +142,8 @@ class Parser:
                                self.try_to_parse_matrix,
                                self.try_to_parse_string]:
             iterable = parse_iterable()
+        if iterable is None:
+            self.error(error_code=ErrorCode.EXPECTED_ITERABLE)
 
         self.expect(TokenType.RPAREN)
 
@@ -362,9 +368,15 @@ class Parser:
 
         while self.lexer.current_token.type == TokenType.SEMI:
             self.lexer.build_next_token()
-            rows.append(self.try_to_parse_matrix_row())
+
+            if (matrix_row := self.try_to_parse_matrix_row()) is None:
+                self.error(error_code=ErrorCode.EXPECTED_MTRX_ROW)
+
+            rows.append(matrix_row)
             if len(rows[-1]) != len(rows[-2]):
                 self.error(error_code=ErrorCode.MTRX_ROW_LEN_MISMATCH)
+
+        self.expect(TokenType.RBRACK)
 
         return Matrix(rows)
 
@@ -421,12 +433,17 @@ class Parser:
         return String(token_string)
 
     def try_to_parse_matrix_row(self):
-        expressions = [self.try_to_parse_expression()]
+        if (expression := self.try_to_parse_condition_expression()) is None:
+            return None
+        expressions = [expression]
 
         while self.lexer.current_token.type == TokenType.COMMA:
             self.lexer.build_next_token()
 
-            expressions.append(self.try_to_parse_expression())
+            if (expression := self.try_to_parse_condition_expression()) is None:
+                self.error(error_code=ErrorCode.EXPECTED_MTRX_ITEM)
+
+            expressions.append(expression)
 
         return MatrixRow(expressions)
 
@@ -436,5 +453,5 @@ class Parser:
             position=self.lexer.current_token.position,
             context=self.lexer.source.get_last_context(),
             source_type=self.lexer.source.get_source_type(),
-            expected_val=expected
+            expected_token_type=expected
         )
