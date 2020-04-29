@@ -70,8 +70,7 @@ class Parser:
         for try_to_parse_statement in [self.try_to_parse_while_loop,
                                        self.try_to_parse_for_loop,
                                        self.try_to_parse_if_statement,
-                                       self.try_to_parse_compound_statement,
-                                       self.try_to_parse_ret_statement]:
+                                       self.try_to_parse_compound_statement]:
             if statement := try_to_parse_statement():
                 return statement
 
@@ -81,8 +80,8 @@ class Parser:
         # because of the mandatory semi at the end
         #
         for try_to_parse_before_semi in [self.try_to_parse_do_while_loop,
-                                         self.try_to_parse_ret_statement,
-                                         self.try_to_parse_expression]:
+                                         self.try_to_parse_expression,
+                                         self.try_to_parse_ret_statement]:
             if statement := try_to_parse_before_semi():
                 self.expect(TokenType.SEMI)
                 return statement
@@ -197,7 +196,8 @@ class Parser:
             return None
         self.lexer.build_next_token()
 
-        expression = self.try_to_parse_expression()
+        if (expression := self.try_to_parse_expression()) is None:
+            self.error(error_code=ErrorCode.EXPECTED_EXPRESSION)
 
         return ReturnStatement(expression)
 
