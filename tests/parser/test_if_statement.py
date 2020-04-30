@@ -11,10 +11,10 @@ class TestIfStatementFails(unittest.TestCase):
 
     def test_empty_condition(self):
         s = 'if ();'
-        should_fail(self, s, ErrorCode.EMPTY_COND)
+        should_fail(self, s, ErrorCode.EXPECTED_CONDITION)
 
         s = 'if ((((()))));'
-        should_fail(self, s, ErrorCode.EMPTY_COND)
+        should_fail(self, s, ErrorCode.EXPECTED_CONDITION)
 
     def test_rparen(self):
         s = 'if (c ;'

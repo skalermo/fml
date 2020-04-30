@@ -26,7 +26,7 @@ class TestMatrixSubscriptingFails(unittest.TestCase):
         should_fail(self, s, ErrorCode.UNEXPECTED_TOKEN, TokenType.RBRACK)
 
         s = 'm[:,a+:];'
-        should_fail(self, s, ErrorCode.RVAL_FAIL)
+        should_fail(self, s, ErrorCode.EXPECTED_RVALUE)
 
         s = 'm[:,:+a];'
         should_fail(self, s, ErrorCode.UNEXPECTED_TOKEN, TokenType.RBRACK)

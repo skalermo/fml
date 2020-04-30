@@ -1,4 +1,4 @@
-for (in [a, b, c]);
++;
 
 fun some_function(,);
 

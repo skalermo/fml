@@ -117,7 +117,7 @@ class Parser:
         self.expect(TokenType.LPAREN)
 
         if (condition_expression := self.try_to_parse_condition_expression()) is None:
-            self.error(error_code=ErrorCode.EMPTY_COND)
+            self.error(error_code=ErrorCode.EXPECTED_CONDITION)
 
         self.expect(TokenType.RPAREN)
 
@@ -161,7 +161,7 @@ class Parser:
         self.expect(TokenType.LPAREN)
 
         if (condition_expression := self.try_to_parse_condition_expression()) is None:
-            self.error(error_code=ErrorCode.EMPTY_COND)
+            self.error(error_code=ErrorCode.EXPECTED_CONDITION)
 
         self.expect(TokenType.RPAREN)
 
@@ -214,9 +214,9 @@ class Parser:
         op = self.lexer.current_token
         self.lexer.build_next_token()
 
-        # Here parsing expression - allows nested assignments
+        # Allow nested assignments
         if (rvalue := self.try_to_parse_expression()) is None:
-            self.error(error_code=ErrorCode.RVAL_FAIL)
+            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
         return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_condition_expression(self):
@@ -229,7 +229,7 @@ class Parser:
         self.lexer.build_next_token()
 
         if (rvalue := self.try_to_parse_condition_expression()) is None:
-            self.error(error_code=ErrorCode.RVAL_FAIL)
+            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
         return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_andExpression(self):
@@ -242,7 +242,7 @@ class Parser:
         self.lexer.build_next_token()
 
         if (rvalue := self.try_to_parse_andExpression()) is None:
-            self.error(error_code=ErrorCode.RVAL_FAIL)
+            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
         return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_equality_expression(self):
@@ -256,7 +256,7 @@ class Parser:
         self.lexer.build_next_token()
 
         if (rvalue := self.try_to_parse_equality_expression()) is None:
-            self.error(error_code=ErrorCode.RVAL_FAIL)
+            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
         return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_relative_expression(self):
@@ -272,7 +272,7 @@ class Parser:
         self.lexer.build_next_token()
 
         if (rvalue := self.try_to_parse_relative_expression()) is None:
-            self.error(error_code=ErrorCode.RVAL_FAIL)
+            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
         return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_arithmetic_expression(self):
@@ -286,7 +286,7 @@ class Parser:
         self.lexer.build_next_token()
 
         if (rvalue := self.try_to_parse_arithmetic_expression()) is None:
-            self.error(error_code=ErrorCode.RVAL_FAIL)
+            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
         return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_term(self):
@@ -302,7 +302,7 @@ class Parser:
         self.lexer.build_next_token()
 
         if (rvalue := self.try_to_parse_term()) is None:
-            self.error(error_code=ErrorCode.RVAL_FAIL)
+            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
         return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_miniterm(self):
@@ -312,7 +312,12 @@ class Parser:
             return self.try_to_parse_microterm()
 
         op = self.lexer.current_token
-        return UnaryOperator(op, self.try_to_parse_microterm())
+        self.lexer.build_next_token()
+
+        # Allow nested unary operators
+        if (rvalue := self.try_to_parse_miniterm()) is None:
+            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
+        return UnaryOperator(op, rvalue)
 
     def try_to_parse_microterm(self):
         lvalue = self.try_to_parse_factor()
@@ -322,8 +327,9 @@ class Parser:
         op = self.lexer.current_token
         self.lexer.build_next_token()
 
+        # Do not allow nested power operations
         if (rvalue := self.try_to_parse_factor()) is None:
-            self.error(error_code=ErrorCode.RVAL_FAIL)
+            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
         return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_factor(self):

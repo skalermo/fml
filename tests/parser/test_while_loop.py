@@ -25,13 +25,13 @@ class TestWhileLoopFails(unittest.TestCase):
 
     def test_loop_empty_condition(self):
         loop = 'while () 1+2;'
-        should_fail(self, loop, ErrorCode.EMPTY_COND)
+        should_fail(self, loop, ErrorCode.EXPECTED_CONDITION)
 
         loop = 'while (()) 1+2;'
-        should_fail(self, loop, ErrorCode.EMPTY_COND)
+        should_fail(self, loop, ErrorCode.EXPECTED_CONDITION)
 
         loop = 'while ((())) 1+2;'
-        should_fail(self, loop, ErrorCode.EMPTY_COND)
+        should_fail(self, loop, ErrorCode.EXPECTED_CONDITION)
 
 
 if __name__ == '__main__':
