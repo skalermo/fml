@@ -1,80 +1,86 @@
 import unittest
-from Source.Source import StringSource
-from Lexer.Lexer import Lexer
-from Parser.Parser import Parser
-from Error import ParserError, ErrorCode
+from Error import ErrorCode
+from tests.parser.utils import should_fail
 
 
 class TestExpressionsFails(unittest.TestCase):
-    @staticmethod
-    def should_fail(tester, expression, expected_error_code=None):
-        parser = Parser(Lexer(StringSource(expression)))
-        with tester.assertRaises(ParserError) as e:
-            parser.parse_program()
-        if expected_error_code is not None:
-            tester.assertEqual(expected_error_code, e.exception.error_code)
-
     def test_rvalue_assignment(self):
         expr = 'a =;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
     def test_rvalue_or_expr(self):
         expr = '-3 + 3 or;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
     def test_rvalue_and_expr(self):
         expr = 'a + a- b ' \
                'and;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
     def test_rvalue_eq_expr(self):
         expr = '-5 == 2;' \
                '3 ==;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
         expr = 'b != a;' \
                'b != ;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
     def test_rvalue_relativ_expr(self):
         expr = '-4 <;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
         expr = 'a >=;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
         expr = 'c <=;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
         expr = 'a >;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
     def test_rvalue_aexpr(self):
         expr = '-3 + 3 + +;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
         expr = '- a -;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
         expr = '-;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
     def test_rvalue_term(self):
         expr = 'a * b *;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
         expr = 'a - b div 5; b div;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
         expr = '80 mod b; 6 mod;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
         expr = 'b / a / b / a / b /;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
     def test_rvalue_microterm(self):
         expr = 'a = b **;'
-        TestExpressionsFails.should_fail(self, expr, ErrorCode.RVAL_FAIL)
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
+
+    def test_unary_operators(self):
+        expr = ' -;'
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
+
+        expr = 'not;'
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
+
+        expr = '+;'
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
+
+        expr = 'not ();'
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
+
+        expr = '(- );'
+        should_fail(self, expr, ErrorCode.EXPECTED_RVALUE)
 
 
 if __name__ == '__main__':
