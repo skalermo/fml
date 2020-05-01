@@ -1,0 +1,8 @@
+# check columns and lines
+a + b  ;
+a - - -a;
+{
+    3;
+         { ;
+      23;
+11 = 322 fsadfas ;f asdfas;

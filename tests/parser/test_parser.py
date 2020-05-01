@@ -5,8 +5,8 @@ from Lexer.Lexer import Lexer
 
 
 class ParserTest(unittest.TestCase):
-    def test(self):
-        filename = 'parser_test1.txt'
+    def test_fun_defs(self):
+        filename = 'fun_defs.txt'
         src = FileSource(filename)
         lexer = Lexer(src)
         parser = Parser(lexer)

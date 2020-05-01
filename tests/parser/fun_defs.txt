@@ -1,0 +1,33 @@
++;
+
+fun some_function(,);
+
+fun dumb();
+
+fun dumb2()a
+    ;;;;
+
+fun dumb3(){}
+
+fun get_1_arg_and_do_nothing(a)
+    a;
+
+fun add_2_numbers(a, b)
+    ret a+b;
+
+fun cmpd_stat(){;}
+
+fun nested_cmpd_stat(){{{{;}}}{;}{{;}}{;}{{{;}{;}}}}
+
+fun simple_expr(a, b){
+    -a + b - a - b;
+    b+b+a-b+b;
+}
+
+fun assignment(a, b){
+    new_var = a+b;
+}
+
+fun mul_assignments(){
+    new_var = another_new_var = yet_another_var = 0;
+}

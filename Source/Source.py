@@ -8,10 +8,10 @@ class Source:
 
         self.line = 1
         self.column = 1
-        self._pos = 1
+        self.current_pos = 0
 
         # start of new fun definition or statement
-        self._last_context_start_pos = 1
+        self._last_context_start_pos = 0
 
     def move_to_next_char(self):
         try:
@@ -21,17 +21,21 @@ class Source:
             return
 
         self.column += 1
-        self._pos += 1
+        self.current_pos += 1
 
         if self.current_char == '\n':
             self.line += 1
             self.column = 0
+            self.update_context_start(self.current_pos+1)
+
+    def update_context_start(self, token_pos):
+        self._last_context_start_pos = token_pos
 
     def get_last_context(self):
         pass
 
-    def update_context_start(self):
-        self._last_context_start_pos = self._pos
+    def get_source_type(self):
+        pass
 
 
 class FileSource(Source):
@@ -44,9 +48,12 @@ class FileSource(Source):
         self._file.close()
 
     def get_last_context(self):
-        offset = self._pos - self._last_context_start_pos
+        offset = self.current_pos - self._last_context_start_pos
         self._file.seek(self._last_context_start_pos, 0)
         return self._file.read(offset)
+
+    def get_source_type(self):
+        return self._file.name
 
     @staticmethod
     def _read_in_chars(file_object, chunk_size=1024):
@@ -65,10 +72,13 @@ class FileSource(Source):
 
 class StringSource(Source):
     def __init__(self, string):
-        self.string = string
+        self._string = string
         text_generator = (char for char in string)
         super().__init__(text_generator)
 
     def get_last_context(self):
-        offset = self._pos-self._last_context_start_pos
-        return self.string[-offset:]
+        offset = self.current_pos - self._last_context_start_pos
+        return self._string[-offset:]
+
+    def get_source_type(self):
+        return "<string>"
