@@ -84,21 +84,10 @@ class AstDumper(NodeVisitor):
         for object in program.objects:
             self.add_child(lambda object=object: self.visit(object), object)
 
-    def visit_BinaryOperator(self, bin_op):
-        self.add_child(lambda: self.visit(bin_op.lvalue), bin_op.lvalue)
-        self.add_child(lambda: self.visit(bin_op.rvalue), bin_op.rvalue)
-
-    def visit_UnaryOperator(self, unary_op):
-        self.add_child(lambda: self.visit(unary_op.rvalue), unary_op.rvalue)
-
     def visit_FunctionDefinition(self, fun_def):
         for parameter in fun_def.parameter_list:
             self.add_child(lambda parameter=parameter: self.visit(parameter), parameter)
         self.add_child(lambda: self.visit(fun_def.statement), fun_def.statement)
-
-    def visit_CompoundStatement(self, comp_statement):
-        for statement in comp_statement.statement_list:
-            self.add_child(lambda statement=statement: self.visit(statement), statement)
 
     def visit_ReturnStatement(self, ret_statement):
         self.add_child(lambda: self.visit(ret_statement.expression), ret_statement.expression)
@@ -120,6 +109,25 @@ class AstDumper(NodeVisitor):
         self.add_child(lambda: self.visit(do_while_loop.condition_expression),
                        do_while_loop.condition_expression)
 
+    def visit_CompoundStatement(self, comp_statement):
+        for statement in comp_statement.statement_list:
+            self.add_child(lambda statement=statement: self.visit(statement), statement)
+
+    def visit_IfStatement(self, if_statement):
+        self.add_child(lambda: self.visit(if_statement.condition_expression),
+                       if_statement.condition_expression)
+        self.add_child(lambda: self.visit(if_statement.statement), if_statement.statement)
+        if if_statement.else_statement is not None:
+            self.add_child(lambda: self.visit(if_statement.else_statement),
+                           if_statement.else_statement)
+
+    def visit_BinaryOperator(self, bin_op):
+        self.add_child(lambda: self.visit(bin_op.lvalue), bin_op.lvalue)
+        self.add_child(lambda: self.visit(bin_op.rvalue), bin_op.rvalue)
+
+    def visit_UnaryOperator(self, unary_op):
+        self.add_child(lambda: self.visit(unary_op.rvalue), unary_op.rvalue)
+
     def visit_FunctionCall(self, fun_call):
         for argument in fun_call.argument_list:
             self.add_child(lambda argument=argument: self.visit(argument), argument)
@@ -134,6 +142,9 @@ class AstDumper(NodeVisitor):
         pass
 
     def visit_EmptyStatement(self, empty_statement):
+        pass
+
+    def visit_String(self, string):
         pass
 
 
