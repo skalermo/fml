@@ -1,4 +1,7 @@
-class Matrix:
+from Interpreter.Ast import AST
+
+
+class Matrix(AST):
     def __init__(self, rows):
         self.rows = rows
 
@@ -7,6 +10,9 @@ class Matrix:
 
     def __len__(self):
         return len(self.rows)
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}'
 
 
 class MatrixRow:
