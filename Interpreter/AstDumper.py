@@ -132,6 +132,23 @@ class AstDumper(NodeVisitor):
         for argument in fun_call.argument_list:
             self.add_child(lambda argument=argument: self.visit(argument), argument)
 
+    def visit_MatrixSubscripting(self, mtrx_subs):
+        row_idx_label = 'Row '
+        if mtrx_subs.row_index is not None and mtrx_subs.column_index is None:
+            row_idx_label = ''
+        if mtrx_subs.row_index is not None:
+            self.add_child(lambda: self.visit(mtrx_subs.row_index),
+                           f'{row_idx_label}{mtrx_subs.row_index}')
+        if mtrx_subs.column_index is not None:
+            self.add_child(lambda: self.visit(mtrx_subs.column_index),
+                           f'Column {mtrx_subs.column_index}')
+
+    def visit_MatrixIndex(self, idx):
+        if not idx.is_colon:
+            self.add_child(lambda: self.visit(idx.expression), idx.expression)
+        else:
+            self.add_child(lambda: None, 'Colon')
+
     def visit_Matrix(self, matrix):
         pass
 
