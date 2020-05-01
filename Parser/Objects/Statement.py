@@ -41,8 +41,8 @@ class DoWhileLoop(WhileLoop):
 
 
 class IfStatement(Statement):
-    def __init__(self, conditional_expression, statement, else_statement: [Statement, None]):
-        self.conditional_expression = conditional_expression
+    def __init__(self, condition_expression, statement, else_statement: [Statement, None]):
+        self.condition_expression = condition_expression
         self.statement = statement
         self.else_statement = else_statement
 
