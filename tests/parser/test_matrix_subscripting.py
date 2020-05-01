@@ -18,6 +18,10 @@ class TestMatrixSubscriptingFails(unittest.TestCase):
         s = 'm[];'
         should_fail(self, s, ErrorCode.EXPECTED_EXPRESSION)
 
+    def test_no_first_index(self):
+        s = 'm[,a];'
+        should_fail(self, s, ErrorCode.EXPECTED_EXPRESSION)
+
     def test_colon_index(self):
         s = 'm[:,];'
         should_fail(self, s, ErrorCode.EXPECTED_EXPRESSION)
