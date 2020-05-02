@@ -1,4 +1,5 @@
 from Error import ParserError, ErrorCode
+from Lexer.Lexer import Lexer
 from Lexer.Token import TokenType
 from Parser.Objects.Program import Program
 from Parser.Objects.Function import *
@@ -11,9 +12,8 @@ from Parser.Objects.Operators import *
 
 
 class Parser:
-    def __init__(self, lexer):
-        self.lexer = lexer
-        # self.program = self.parse_program()
+    def __init__(self, source):
+        self.lexer = Lexer(source)
 
     def expect(self, expected_token_type):
         if self.lexer.current_token.type != expected_token_type:
