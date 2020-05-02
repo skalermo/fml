@@ -1,5 +1,14 @@
 from Interpreter.Ast import NodeVisitor
 from Interpreter.TextTreeStructure import TextTreeStructure
+from Source.Source import Source
+from Parser.Parser import Parser
+
+
+def dumpAST(source: Source):
+    parser = Parser(source)
+    program = parser.parse_program()
+    ast_dumper = AstDumper()
+    ast_dumper.add_child(lambda: ast_dumper.visit(program), str(program))
 
 
 class AstDumper(NodeVisitor, TextTreeStructure):
