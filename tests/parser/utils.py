@@ -1,11 +1,10 @@
 from Source.Source import StringSource
-from Lexer.Lexer import Lexer
 from Parser.Parser import Parser
-from Error import ParserError, ErrorCode
+from Error import ParserError
 
 
 def should_fail(tester, string_source, expected_error_code=None, expected_token_type=None):
-    parser = Parser(Lexer(StringSource(string_source)))
+    parser = Parser(StringSource(string_source))
     with tester.assertRaises(ParserError) as e:
         parser.parse_program()
     if expected_error_code is not None:
