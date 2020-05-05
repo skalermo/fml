@@ -34,7 +34,7 @@ class TestOperatorConnectivity(unittest.TestCase):
         return visitor(expected, actual)
 
     def visit_and_compare_BinaryOperator(self, expected, actual):
-        self.assertEqual(expected.op.type, expected.op.type)
+        self.assertEqual(expected.op.type, actual.op.type)
 
         self.visit_and_compare(expected.lvalue, actual.lvalue)
         self.visit_and_compare(expected.rvalue, actual.rvalue)
