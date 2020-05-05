@@ -336,7 +336,7 @@ class Parser:
     def try_to_parse_factor(self):
         for try_to_parse_factor in [self.try_to_parse_constant,
                                     self.try_to_parse_non_constant,
-                                    self.try_to_parse_expression_in_brackets]:
+                                    self.try_to_parse_expression_inside_parentheses]:
             if factor := try_to_parse_factor():
                 return factor
         return None
@@ -358,12 +358,13 @@ class Parser:
                 return non_constant
         return id
 
-    def try_to_parse_expression_in_brackets(self):
+    def try_to_parse_expression_inside_parentheses(self):
         if self.lexer.current_token.type != TokenType.LPAREN:
             return None
         self.lexer.build_next_token()
 
-        # maybe be brackets with no expression
+        # allow parentheses to have no expression inside
+        # do not check if expression is None
         expression = self.try_to_parse_expression()
         self.expect(TokenType.RPAREN)
         return expression
