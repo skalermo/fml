@@ -213,7 +213,7 @@ class Parser:
         op = self.lexer.current_token
         self.lexer.build_next_token()
 
-        # Allow nested assignments
+        # Allow nested assignments (right connectivity)
         if (rvalue := self.try_to_parse_expression()) is None:
             self.error(error_code=ErrorCode.EXPECTED_RVALUE)
         return BinaryOperator(lvalue, op, rvalue)
@@ -221,88 +221,90 @@ class Parser:
     def try_to_parse_condition_expression(self):
         lvalue = self.try_to_parse_andExpression()
 
-        if self.lexer.current_token.type != TokenType.OR:
-            return lvalue
+        while self.lexer.current_token.type == TokenType.OR:
+            op = self.lexer.current_token
+            self.lexer.build_next_token()
 
-        op = self.lexer.current_token
-        self.lexer.build_next_token()
+            if (rvalue := self.try_to_parse_andExpression()) is None:
+                self.error(error_code=ErrorCode.EXPECTED_RVALUE)
+            lvalue = BinaryOperator(lvalue, op, rvalue)
 
-        if (rvalue := self.try_to_parse_condition_expression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
-        return BinaryOperator(lvalue, op, rvalue)
+        return lvalue
 
     def try_to_parse_andExpression(self):
         lvalue = self.try_to_parse_equality_expression()
 
-        if self.lexer.current_token.type != TokenType.AND:
-            return lvalue
+        while self.lexer.current_token.type == TokenType.AND:
+            op = self.lexer.current_token
+            self.lexer.build_next_token()
 
-        op = self.lexer.current_token
-        self.lexer.build_next_token()
+            if (rvalue := self.try_to_parse_equality_expression()) is None:
+                self.error(error_code=ErrorCode.EXPECTED_RVALUE)
 
-        if (rvalue := self.try_to_parse_andExpression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
-        return BinaryOperator(lvalue, op, rvalue)
+            lvalue = BinaryOperator(lvalue, op, rvalue)
+
+        return lvalue
 
     def try_to_parse_equality_expression(self):
         lvalue = self.try_to_parse_relative_expression()
 
-        if self.lexer.current_token.type not in [TokenType.EQ,
-                                                 TokenType.NEQ]:
-            return lvalue
+        while self.lexer.current_token.type in [TokenType.EQ,
+                                                TokenType.NEQ]:
+            op = self.lexer.current_token
+            self.lexer.build_next_token()
 
-        op = self.lexer.current_token
-        self.lexer.build_next_token()
+            if (rvalue := self.try_to_parse_relative_expression()) is None:
+                self.error(error_code=ErrorCode.EXPECTED_RVALUE)
 
-        if (rvalue := self.try_to_parse_equality_expression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
-        return BinaryOperator(lvalue, op, rvalue)
+            lvalue = BinaryOperator(lvalue, op, rvalue)
+
+        return lvalue
 
     def try_to_parse_relative_expression(self):
         lvalue = self.try_to_parse_arithmetic_expression()
 
-        if self.lexer.current_token.type not in [TokenType.LEQ,
-                                                 TokenType.LESS,
-                                                 TokenType.GEQ,
-                                                 TokenType.GRE]:
-            return lvalue
+        while self.lexer.current_token.type in [TokenType.LEQ,
+                                                TokenType.LESS,
+                                                TokenType.GEQ,
+                                                TokenType.GRE]:
+            op = self.lexer.current_token
+            self.lexer.build_next_token()
 
-        op = self.lexer.current_token
-        self.lexer.build_next_token()
+            if (rvalue := self.try_to_parse_arithmetic_expression()) is None:
+                self.error(error_code=ErrorCode.EXPECTED_RVALUE)
+            lvalue = BinaryOperator(lvalue, op, rvalue)
 
-        if (rvalue := self.try_to_parse_relative_expression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
-        return BinaryOperator(lvalue, op, rvalue)
+        return lvalue
 
     def try_to_parse_arithmetic_expression(self):
         lvalue = self.try_to_parse_term()
 
-        if self.lexer.current_token.type not in [TokenType.PLUS,
-                                                 TokenType.MINUS]:
-            return lvalue
+        while self.lexer.current_token.type in [TokenType.PLUS,
+                                                TokenType.MINUS]:
+            op = self.lexer.current_token
+            self.lexer.build_next_token()
 
-        op = self.lexer.current_token
-        self.lexer.build_next_token()
+            if (rvalue := self.try_to_parse_term()) is None:
+                self.error(error_code=ErrorCode.EXPECTED_RVALUE)
+            lvalue = BinaryOperator(lvalue, op, rvalue)
 
-        if (rvalue := self.try_to_parse_arithmetic_expression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
-        return BinaryOperator(lvalue, op, rvalue)
+        return lvalue
 
     def try_to_parse_term(self):
         lvalue = self.try_to_parse_miniterm()
 
-        if self.lexer.current_token.type not in [TokenType.MUL,
-                                                 TokenType.FLOAT_DIV,
-                                                 TokenType.INTEGER_DIV,
-                                                 TokenType.MODULO]:
-            return lvalue
+        while self.lexer.current_token.type in [TokenType.MUL,
+                                                TokenType.FLOAT_DIV,
+                                                TokenType.INTEGER_DIV,
+                                                TokenType.MODULO]:
+            op = self.lexer.current_token
+            self.lexer.build_next_token()
 
-        op = self.lexer.current_token
-        self.lexer.build_next_token()
+            if (rvalue := self.try_to_parse_miniterm()) is None:
+                self.error(error_code=ErrorCode.EXPECTED_RVALUE)
+            lvalue = BinaryOperator(lvalue, op, rvalue)
 
-        if (rvalue := self.try_to_parse_term()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
-        return BinaryOperator(lvalue, op, rvalue)
+        return lvalue
 
     def try_to_parse_miniterm(self):
         if self.lexer.current_token.type not in [TokenType.PLUS,
