@@ -56,8 +56,8 @@ class Parser:
 
         parameter_list = [Identifier(self.expect(TokenType.ID))]
 
-        while self.lexer.current_token.type != TokenType.RPAREN:
-            self.expect(TokenType.COMMA)
+        while self.lexer.current_token.type == TokenType.COMMA:
+            self.lexer.build_next_token()
 
             parameter_list.append(Identifier(self.expect(TokenType.ID)))
 
@@ -425,8 +425,8 @@ class Parser:
             return []
         argument_list = [expression]
 
-        while self.lexer.current_token.type != TokenType.RPAREN:
-            self.expect(TokenType.COMMA)
+        while self.lexer.current_token.type == TokenType.COMMA:
+            self.lexer.build_next_token()
 
             if (expression := self.try_to_parse_expression()) is None:
                 self.error(error_code=ErrorCode.EXPECTED_EXPRESSION)
