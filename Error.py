@@ -75,6 +75,8 @@ class Error(Exception):
         pointer_line = ''.join([' '*(len(context)-1), '^\n'])
         context += '\n'
         message = f'{type(self).__name__}: {error_code}{expected}\n'
+
+        self.description = description
         if description:
             description += '\n'
 

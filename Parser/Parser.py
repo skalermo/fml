@@ -140,7 +140,7 @@ class Parser:
 
         statement = self.expect_not_none(
             self.try_to_parse_statement(),
-            error_description=ErrorDescription.EMPTY_DO_WHILE_BODY
+            error_description=ErrorDescription.EMPTY_WHILE_BODY
         )
 
         return WhileLoop(statement, condition_expression)
@@ -158,7 +158,7 @@ class Parser:
 
         iterable = self.expect_not_none(
             self.try_to_parse_iterable(),
-            error_description=ErrorDescription.EMPTY_DO_WHILE_BODY
+            error_description=ErrorDescription.NO_ITERABLE
         )
 
         self.expect(TokenType.RPAREN)

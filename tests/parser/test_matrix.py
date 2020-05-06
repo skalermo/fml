@@ -1,6 +1,6 @@
 import unittest
 from Lexer.Lexer import TokenType
-from Error import ErrorCode
+from Error import ErrorCode, ErrorDescription
 from tests.parser.utils import should_fail
 
 
@@ -15,10 +15,16 @@ class TestMatrixFails(unittest.TestCase):
 
     def test_one_row(self):
         m = '[a, ]'
-        should_fail(self, m, ErrorCode.EXPECTED_MTRX_ITEM)
+        should_fail(self, m,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.NO_ITEM)
 
         m = '[a, b, '
-        should_fail(self, m, ErrorCode.EXPECTED_MTRX_ITEM)
+        should_fail(self, m,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.NO_ITEM)
 
         m = '[, b, '
         should_fail(self, m, ErrorCode.UNEXPECTED_TOKEN, TokenType.RBRACK)
@@ -28,7 +34,10 @@ class TestMatrixFails(unittest.TestCase):
 
     def test_multiple_rows(self):
         m = '[a;];'
-        should_fail(self, m, ErrorCode.EXPECTED_MTRX_ROW)
+        should_fail(self, m,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.EMPTY_MTRX_ROW)
 
         m = '[[]'
         should_fail(self, m, ErrorCode.UNEXPECTED_TOKEN, TokenType.RBRACK)
@@ -47,14 +56,20 @@ class TestMatrixFails(unittest.TestCase):
         should_fail(self, m, ErrorCode.MTRX_ROW_LEN_MISMATCH)
 
         m = '[a;b;;d]'
-        should_fail(self, m, ErrorCode.EXPECTED_MTRX_ROW)
+        should_fail(self, m,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.EMPTY_MTRX_ROW)
 
         m = '[' \
             '1+2+3;' \
             ';' \
             '5*3**2-1' \
             '];'
-        should_fail(self, m, ErrorCode.EXPECTED_MTRX_ROW)
+        should_fail(self, m,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.EMPTY_MTRX_ROW)
 
     def test_nested_matrices(self):
         m = '[[[[]]]]'
@@ -74,13 +89,19 @@ class TestMatrixFails(unittest.TestCase):
         m = '[' \
             '[], [], [];' \
             '];'
-        should_fail(self, m, ErrorCode.EXPECTED_MTRX_ROW)
+        should_fail(self, m,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.EMPTY_MTRX_ROW)
 
         m = '[' \
             '[], [], [];' \
             '[], [],' \
             '];'
-        should_fail(self, m, ErrorCode.EXPECTED_MTRX_ITEM)
+        should_fail(self, m,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.NO_ITEM)
 
         m = '[' \
             '[], [], [];' \

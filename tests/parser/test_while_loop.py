@@ -1,6 +1,6 @@
 import unittest
 from Lexer.Token import TokenType
-from Error import ErrorCode
+from Error import ErrorCode, ErrorDescription
 from tests.parser.utils import should_fail
 
 
@@ -18,20 +18,35 @@ class TestWhileLoopFails(unittest.TestCase):
 
     def test_loop_no_statement(self):
         loop = 'while (1>0)'
-        should_fail(self, loop, ErrorCode.EXPECTED_STATEMENT)
+        should_fail(self, loop,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.EMPTY_WHILE_BODY)
 
         loop = 'while (1>0){}'
-        should_fail(self, loop, ErrorCode.EXPECTED_STATEMENT)
+        should_fail(self, loop,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.EMPTY_COMPOUND_STATEMENT)
 
     def test_loop_empty_condition(self):
         loop = 'while () 1+2;'
-        should_fail(self, loop, ErrorCode.EXPECTED_CONDITION)
+        should_fail(self, loop,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.EMPTY_WHILE_CONDITION)
 
         loop = 'while (()) 1+2;'
-        should_fail(self, loop, ErrorCode.EXPECTED_CONDITION)
+        should_fail(self, loop,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.EMPTY_WHILE_CONDITION)
 
         loop = 'while ((())) 1+2;'
-        should_fail(self, loop, ErrorCode.EXPECTED_CONDITION)
+        should_fail(self, loop,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.EMPTY_WHILE_CONDITION)
 
 
 if __name__ == '__main__':
