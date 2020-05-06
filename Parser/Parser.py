@@ -54,14 +54,17 @@ class Parser:
         if self.lexer.current_token.type == TokenType.RPAREN:
             return []
 
-        parameter_list = [Identifier(self.expect(TokenType.ID))]
+        parameter_list = [self.expect_parameter()]
 
         while self.lexer.current_token.type == TokenType.COMMA:
             self.lexer.build_next_token()
 
-            parameter_list.append(Identifier(self.expect(TokenType.ID)))
+            parameter_list.append(self.expect_parameter())
 
         return parameter_list
+
+    def expect_parameter(self):
+        return Identifier(self.expect(TokenType.ID))
 
     def try_to_parse_statement(self):
         self.lexer.source.update_context_start(self.lexer.current_token.position.pos)
