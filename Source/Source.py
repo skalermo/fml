@@ -77,8 +77,7 @@ class StringSource(Source):
         super().__init__(text_generator)
 
     def get_last_context(self):
-        offset = self.current_pos - self._last_context_start_pos
-        return self._string[-offset:]
+        return self._string[self._last_context_start_pos:self.current_pos]
 
     def get_source_type(self):
         return "<string>"
