@@ -8,7 +8,7 @@ class FunctionDefinition(AST):
         self.statement = statement
 
     def __repr__(self):
-        return f'{self.__class__.__name__}: {self.id.value}'
+        return f'{self.__class__.__name__}: {self.id.token.value}'
 
 
 class FunctionCall(AST):
