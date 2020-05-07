@@ -1,5 +1,4 @@
 import unittest
-import unittest
 from Lexer.Token import TokenType
 from Error import ErrorCode
 from tests.parser.utils import should_fail
@@ -13,7 +12,7 @@ class TestDoWhileFails(unittest.TestCase):
         should_fail(self, loop, ErrorCode.UNEXPECTED_TOKEN, TokenType.WHILE)
 
         loop = 'do fun function(a, b);'
-        should_fail(self, loop, ErrorCode.EXPECTED_STATEMENT)
+        should_fail(self, loop, ErrorCode.EXPECTED_NOT_NONE)
 
     def test_loop_no_while_token(self):
         loop = 'do {;};'

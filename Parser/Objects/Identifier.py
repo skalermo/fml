@@ -7,3 +7,6 @@ class Identifier(AST):
 
     def __repr__(self):
         return f'{self.__class__.__name__}: {self.token.value}'
+
+    def get_name(self):
+        return self.token.value

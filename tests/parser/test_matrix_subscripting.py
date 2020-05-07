@@ -1,6 +1,6 @@
 import unittest
 from Lexer.Lexer import TokenType
-from Error import ErrorCode
+from Error import ErrorCode, ErrorDescription
 from tests.parser.utils import should_fail
 
 
@@ -16,21 +16,33 @@ class TestMatrixSubscriptingFails(unittest.TestCase):
 
     def test_empty_index(self):
         s = 'm[];'
-        should_fail(self, s, ErrorCode.EXPECTED_EXPRESSION)
+        should_fail(self, s,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.NO_INDEX)
 
     def test_no_first_index(self):
         s = 'm[,a];'
-        should_fail(self, s, ErrorCode.EXPECTED_EXPRESSION)
+        should_fail(self, s,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.NO_INDEX)
 
     def test_colon_index(self):
         s = 'm[:,];'
-        should_fail(self, s, ErrorCode.EXPECTED_EXPRESSION)
+        should_fail(self, s,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.NO_INDEX)
 
         s = 'm[::];'
         should_fail(self, s, ErrorCode.UNEXPECTED_TOKEN, TokenType.RBRACK)
 
         s = 'm[:,a+:];'
-        should_fail(self, s, ErrorCode.EXPECTED_RVALUE)
+        should_fail(self, s,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.NO_RVALUE)
 
         s = 'm[:,:+a];'
         should_fail(self, s, ErrorCode.UNEXPECTED_TOKEN, TokenType.RBRACK)

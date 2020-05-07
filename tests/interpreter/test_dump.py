@@ -1,6 +1,5 @@
 import unittest
 from Parser.Parser import Parser
-from Lexer.Lexer import Lexer
 from Source.Source import StringSource
 from Interpreter.AstDumper import AstDumper
 
@@ -40,7 +39,7 @@ class TestAstDumper(unittest.TestCase):
             'e[1, :];\n' \
             'f[:, :];'
 
-        parser = Parser(Lexer(StringSource(string_source)))
+        parser = Parser(StringSource(string_source))
         program = parser.parse_program()
         ast_dumper = AstDumper()
         ast_dumper.add_child(lambda: ast_dumper.visit(program), str(program))

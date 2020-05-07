@@ -1,4 +1,4 @@
-from Error import ParserError, ErrorCode
+from Error import ParserError, ErrorCode, ErrorDescription
 from Lexer.Lexer import Lexer
 from Lexer.Token import TokenType
 from Parser.Objects.Program import Program
@@ -14,6 +14,8 @@ from Parser.Objects.Operators import *
 class Parser:
     def __init__(self, source):
         self.lexer = Lexer(source)
+        self.source = source
+        self.start_of_object_pos = 0
 
     def expect(self, expected_token_type):
         if self.lexer.current_token.type != expected_token_type:
@@ -22,22 +24,30 @@ class Parser:
         self.lexer.build_next_token()
         return prev_token
 
+    def expect_not_none(self, tested_object, error_description=''):
+        if tested_object is None:
+            self.error(error_code=ErrorCode.EXPECTED_NOT_NONE,
+                       description=error_description)
+        return tested_object
+
     def parse_program(self):
         toplevel_objects = []
 
         while (parsed_object := self.try_to_parse_fun_definition()) or\
                 (parsed_object := self.try_to_parse_statement()):
             toplevel_objects.append(parsed_object)
+            self.start_of_object_pos = self.lexer.current_token.position.pos
+
+        self.expect(TokenType.ETX)
 
         return Program(toplevel_objects)
 
     def try_to_parse_fun_definition(self):
         if self.lexer.current_token.type != TokenType.FUN:
             return None
-        self.lexer.source.update_context_start(self.lexer.current_token.position.pos)
         self.lexer.build_next_token()
 
-        fun_id = self.expect(TokenType.ID)
+        fun_id = Identifier(self.expect(TokenType.ID))
 
         self.expect(TokenType.LPAREN)
 
@@ -45,8 +55,10 @@ class Parser:
 
         self.expect(TokenType.RPAREN)
 
-        if (statement := self.try_to_parse_statement()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_STATEMENT)
+        statement = self.expect_not_none(
+            self.try_to_parse_statement(),
+            error_description=ErrorDescription.EMPTY_FUN_BODY
+        )
 
         return FunctionDefinition(fun_id, parameter_list, statement)
 
@@ -54,18 +66,19 @@ class Parser:
         if self.lexer.current_token.type == TokenType.RPAREN:
             return []
 
-        parameter_list = [Identifier(self.expect(TokenType.ID))]
+        parameter_list = [self.expect_parameter()]
 
-        while self.lexer.current_token.type != TokenType.RPAREN:
-            self.expect(TokenType.COMMA)
+        while self.lexer.current_token.type == TokenType.COMMA:
+            self.lexer.build_next_token()
 
-            parameter_list.append(Identifier(self.expect(TokenType.ID)))
+            parameter_list.append(self.expect_parameter())
 
         return parameter_list
 
-    def try_to_parse_statement(self):
-        self.lexer.source.update_context_start(self.lexer.current_token.position.pos)
+    def expect_parameter(self):
+        return Identifier(self.expect(TokenType.ID))
 
+    def try_to_parse_statement(self):
         for try_to_parse_statement in [self.try_to_parse_while_loop,
                                        self.try_to_parse_for_loop,
                                        self.try_to_parse_if_statement,
@@ -95,14 +108,19 @@ class Parser:
             return None
         self.lexer.build_next_token()
 
-        if (statement := self.try_to_parse_statement()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_STATEMENT)
+        statement = self.expect_not_none(
+            self.try_to_parse_statement(),
+            error_description=ErrorDescription.EMPTY_DO_WHILE_BODY
+        )
 
         self.expect(TokenType.WHILE)
 
         self.expect(TokenType.LPAREN)
 
-        condition_expression = self.try_to_parse_condition_expression()
+        condition_expression = self.expect_not_none(
+            self.try_to_parse_condition_expression(),
+            error_description=ErrorDescription.EMPTY_DO_WHILE_CONDITION
+        )
 
         self.expect(TokenType.RPAREN)
 
@@ -115,13 +133,17 @@ class Parser:
 
         self.expect(TokenType.LPAREN)
 
-        if (condition_expression := self.try_to_parse_condition_expression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_CONDITION)
+        condition_expression = self.expect_not_none(
+            self.try_to_parse_condition_expression(),
+            error_description=ErrorDescription.EMPTY_WHILE_CONDITION
+        )
 
         self.expect(TokenType.RPAREN)
 
-        if (statement := self.try_to_parse_statement()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_STATEMENT)
+        statement = self.expect_not_none(
+            self.try_to_parse_statement(),
+            error_description=ErrorDescription.EMPTY_WHILE_BODY
+        )
 
         return WhileLoop(statement, condition_expression)
 
@@ -136,12 +158,18 @@ class Parser:
 
         self.expect(TokenType.IN)
 
-        if (iterable := self.try_to_parse_iterable()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_ITERABLE)
+        iterable = self.expect_not_none(
+            self.try_to_parse_iterable(),
+            error_description=ErrorDescription.NO_ITERABLE
+        )
 
         self.expect(TokenType.RPAREN)
 
-        statement = self.try_to_parse_statement()
+        statement = self.expect_not_none(
+            self.try_to_parse_statement(),
+            error_description=ErrorDescription.EMPTY_FOR_BODY
+        )
+
         return ForLoop(iterator, iterable, statement)
 
     def try_to_parse_iterable(self):
@@ -159,21 +187,27 @@ class Parser:
 
         self.expect(TokenType.LPAREN)
 
-        if (condition_expression := self.try_to_parse_condition_expression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_CONDITION)
+        condition_expression = self.expect_not_none(
+            self.try_to_parse_condition_expression(),
+            error_description=ErrorDescription.EMPTY_IF_CONDITION
+        )
 
         self.expect(TokenType.RPAREN)
 
-        if (statement := self.try_to_parse_statement()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_STATEMENT)
+        statement = self.expect_not_none(
+            self.try_to_parse_statement(),
+            error_description=ErrorDescription.EMPTY_IF_BODY
+        )
 
         else_statement = None
 
         if self.lexer.current_token.type == TokenType.ELSE:
             self.lexer.build_next_token()
 
-            if (else_statement := self.try_to_parse_statement()) is None:
-                self.error(error_code=ErrorCode.EXPECTED_STATEMENT)
+            else_statement = self.expect_not_none(
+                self.try_to_parse_statement(),
+                error_description=ErrorDescription.EMPTY_ELSE_BODY
+            )
 
         return IfStatement(condition_expression, statement, else_statement)
 
@@ -188,7 +222,10 @@ class Parser:
             statement_list.append(statement)
 
         if len(statement_list) == 0:
-            self.error(ErrorCode.EXPECTED_STATEMENT)
+            self.error(
+                ErrorCode.EXPECTED_NOT_NONE,
+                description=ErrorDescription.EMPTY_COMPOUND_STATEMENT
+            )
 
         self.expect(TokenType.RCURB)
 
@@ -199,13 +236,16 @@ class Parser:
             return None
         self.lexer.build_next_token()
 
-        if (expression := self.try_to_parse_expression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_EXPRESSION)
+        expression = self.expect_not_none(
+            self.try_to_parse_expression(),
+            error_description=ErrorDescription.EMPTY_RET_BODY
+        )
 
         return ReturnStatement(expression)
 
     def try_to_parse_expression(self):
-        lvalue = self.try_to_parse_condition_expression()
+        if (lvalue := self.try_to_parse_condition_expression()) is None:
+            return None
 
         if self.lexer.current_token.type != TokenType.ASSIGN:
             return lvalue
@@ -213,96 +253,111 @@ class Parser:
         op = self.lexer.current_token
         self.lexer.build_next_token()
 
-        # Allow nested assignments
-        if (rvalue := self.try_to_parse_expression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
+        # Allow nested assignments (right connectivity)
+        rvalue = self.expect_not_none(
+            self.try_to_parse_expression(),
+            error_description=ErrorDescription.NO_RVALUE
+        )
+
         return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_condition_expression(self):
         lvalue = self.try_to_parse_andExpression()
 
-        if self.lexer.current_token.type != TokenType.OR:
-            return lvalue
+        while self.lexer.current_token.type == TokenType.OR:
+            op = self.lexer.current_token
+            self.lexer.build_next_token()
 
-        op = self.lexer.current_token
-        self.lexer.build_next_token()
+            rvalue = self.expect_not_none(
+                self.try_to_parse_andExpression(),
+                error_description=ErrorDescription.NO_RVALUE
+            )
+            lvalue = BinaryOperator(lvalue, op, rvalue)
 
-        if (rvalue := self.try_to_parse_condition_expression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
-        return BinaryOperator(lvalue, op, rvalue)
+        return lvalue
 
     def try_to_parse_andExpression(self):
         lvalue = self.try_to_parse_equality_expression()
 
-        if self.lexer.current_token.type != TokenType.AND:
-            return lvalue
+        while self.lexer.current_token.type == TokenType.AND:
+            op = self.lexer.current_token
+            self.lexer.build_next_token()
 
-        op = self.lexer.current_token
-        self.lexer.build_next_token()
+            rvalue = self.expect_not_none(
+                self.try_to_parse_equality_expression(),
+                error_description=ErrorDescription.NO_RVALUE
+            )
+            lvalue = BinaryOperator(lvalue, op, rvalue)
 
-        if (rvalue := self.try_to_parse_andExpression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
-        return BinaryOperator(lvalue, op, rvalue)
+        return lvalue
 
     def try_to_parse_equality_expression(self):
         lvalue = self.try_to_parse_relative_expression()
 
-        if self.lexer.current_token.type not in [TokenType.EQ,
-                                                 TokenType.NEQ]:
-            return lvalue
+        while self.lexer.current_token.type in [TokenType.EQ,
+                                                TokenType.NEQ]:
+            op = self.lexer.current_token
+            self.lexer.build_next_token()
 
-        op = self.lexer.current_token
-        self.lexer.build_next_token()
+            rvalue = self.expect_not_none(
+                self.try_to_parse_relative_expression(),
+                error_description=ErrorDescription.NO_RVALUE
+            )
+            lvalue = BinaryOperator(lvalue, op, rvalue)
 
-        if (rvalue := self.try_to_parse_equality_expression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
-        return BinaryOperator(lvalue, op, rvalue)
+        return lvalue
 
     def try_to_parse_relative_expression(self):
         lvalue = self.try_to_parse_arithmetic_expression()
 
-        if self.lexer.current_token.type not in [TokenType.LEQ,
-                                                 TokenType.LESS,
-                                                 TokenType.GEQ,
-                                                 TokenType.GRE]:
-            return lvalue
+        while self.lexer.current_token.type in [TokenType.LEQ,
+                                                TokenType.LESS,
+                                                TokenType.GEQ,
+                                                TokenType.GRE]:
+            op = self.lexer.current_token
+            self.lexer.build_next_token()
 
-        op = self.lexer.current_token
-        self.lexer.build_next_token()
+            rvalue = self.expect_not_none(
+                self.try_to_parse_arithmetic_expression(),
+                error_description=ErrorDescription.NO_RVALUE
+            )
+            lvalue = BinaryOperator(lvalue, op, rvalue)
 
-        if (rvalue := self.try_to_parse_relative_expression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
-        return BinaryOperator(lvalue, op, rvalue)
+        return lvalue
 
     def try_to_parse_arithmetic_expression(self):
         lvalue = self.try_to_parse_term()
 
-        if self.lexer.current_token.type not in [TokenType.PLUS,
-                                                 TokenType.MINUS]:
-            return lvalue
+        while self.lexer.current_token.type in [TokenType.PLUS,
+                                                TokenType.MINUS]:
+            op = self.lexer.current_token
+            self.lexer.build_next_token()
 
-        op = self.lexer.current_token
-        self.lexer.build_next_token()
+            rvalue = self.expect_not_none(
+                self.try_to_parse_term(),
+                error_description=ErrorDescription.NO_RVALUE
+            )
+            lvalue = BinaryOperator(lvalue, op, rvalue)
 
-        if (rvalue := self.try_to_parse_arithmetic_expression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
-        return BinaryOperator(lvalue, op, rvalue)
+        return lvalue
 
     def try_to_parse_term(self):
         lvalue = self.try_to_parse_miniterm()
 
-        if self.lexer.current_token.type not in [TokenType.MUL,
-                                                 TokenType.FLOAT_DIV,
-                                                 TokenType.INTEGER_DIV,
-                                                 TokenType.MODULO]:
-            return lvalue
+        while self.lexer.current_token.type in [TokenType.MUL,
+                                                TokenType.FLOAT_DIV,
+                                                TokenType.INTEGER_DIV,
+                                                TokenType.MODULO]:
+            op = self.lexer.current_token
+            self.lexer.build_next_token()
 
-        op = self.lexer.current_token
-        self.lexer.build_next_token()
+            rvalue = self.expect_not_none(
+                self.try_to_parse_miniterm(),
+                error_description=ErrorDescription.NO_RVALUE
+            )
+            lvalue = BinaryOperator(lvalue, op, rvalue)
 
-        if (rvalue := self.try_to_parse_term()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
-        return BinaryOperator(lvalue, op, rvalue)
+        return lvalue
 
     def try_to_parse_miniterm(self):
         if self.lexer.current_token.type not in [TokenType.PLUS,
@@ -314,8 +369,10 @@ class Parser:
         self.lexer.build_next_token()
 
         # Allow nested unary operators
-        if (rvalue := self.try_to_parse_miniterm()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
+        rvalue = self.expect_not_none(
+            self.try_to_parse_miniterm(),
+            error_description=ErrorDescription.NO_RVALUE
+        )
         return UnaryOperator(op, rvalue)
 
     def try_to_parse_microterm(self):
@@ -327,14 +384,16 @@ class Parser:
         self.lexer.build_next_token()
 
         # Do not allow nested power operations
-        if (rvalue := self.try_to_parse_factor()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_RVALUE)
+        rvalue = self.expect_not_none(
+            self.try_to_parse_factor(),
+            error_description=ErrorDescription.NO_RVALUE
+        )
         return BinaryOperator(lvalue, op, rvalue)
 
     def try_to_parse_factor(self):
         for try_to_parse_factor in [self.try_to_parse_constant,
                                     self.try_to_parse_non_constant,
-                                    self.try_to_parse_expression_in_brackets]:
+                                    self.try_to_parse_expression_inside_parentheses]:
             if factor := try_to_parse_factor():
                 return factor
         return None
@@ -356,12 +415,13 @@ class Parser:
                 return non_constant
         return id
 
-    def try_to_parse_expression_in_brackets(self):
+    def try_to_parse_expression_inside_parentheses(self):
         if self.lexer.current_token.type != TokenType.LPAREN:
             return None
         self.lexer.build_next_token()
 
-        # maybe be brackets with no expression
+        # allow parentheses to have no expression inside
+        # do not check if expression is None
         expression = self.try_to_parse_expression()
         self.expect(TokenType.RPAREN)
         return expression
@@ -384,12 +444,17 @@ class Parser:
         while self.lexer.current_token.type == TokenType.SEMI:
             self.lexer.build_next_token()
 
-            if (matrix_row := self.try_to_parse_matrix_row()) is None:
-                self.error(error_code=ErrorCode.EXPECTED_MTRX_ROW)
+            matrix_row = self.expect_not_none(
+                self.try_to_parse_matrix_row(),
+                error_description=ErrorDescription.EMPTY_MTRX_ROW
+            )
 
             rows.append(matrix_row)
             if len(rows[-1]) != len(rows[-2]):
-                self.error(error_code=ErrorCode.MTRX_ROW_LEN_MISMATCH)
+                self.error(
+                    error_code=ErrorCode.MTRX_ROW_LEN_MISMATCH,
+                    description='Rows in matrix should have same length.'
+                )
 
         self.expect(TokenType.RBRACK)
 
@@ -422,11 +487,13 @@ class Parser:
             return []
         argument_list = [expression]
 
-        while self.lexer.current_token.type != TokenType.RPAREN:
-            self.expect(TokenType.COMMA)
+        while self.lexer.current_token.type == TokenType.COMMA:
+            self.lexer.build_next_token()
 
-            if (expression := self.try_to_parse_expression()) is None:
-                self.error(error_code=ErrorCode.EXPECTED_EXPRESSION)
+            expression = self.expect_not_none(
+                self.try_to_parse_expression(),
+                error_description=ErrorDescription.NO_ARGUMENT
+            )
             argument_list.append(expression)
 
         return argument_list
@@ -453,8 +520,10 @@ class Parser:
 
             return MatrixIndex(None, True)
 
-        if (expression := self.try_to_parse_expression()) is None:
-            self.error(error_code=ErrorCode.EXPECTED_EXPRESSION)
+        expression = self.expect_not_none(
+            self.try_to_parse_expression(),
+            error_description=ErrorDescription.NO_INDEX
+        )
         return MatrixIndex(expression)
 
     def try_to_parse_string(self):
@@ -473,18 +542,21 @@ class Parser:
         while self.lexer.current_token.type == TokenType.COMMA:
             self.lexer.build_next_token()
 
-            if (expression := self.try_to_parse_condition_expression()) is None:
-                self.error(error_code=ErrorCode.EXPECTED_MTRX_ITEM)
+            expression = self.expect_not_none(
+                self.try_to_parse_condition_expression(),
+                error_description=ErrorDescription.NO_ITEM
+            )
 
             expressions.append(expression)
 
         return MatrixRow(expressions)
 
-    def error(self, error_code=None, expected=None):
+    def error(self, error_code=None, expected=None, description=''):
         raise ParserError(
             error_code=error_code,
-            position=self.lexer.current_token.position,
-            context=self.lexer.source.get_last_context(),
-            source_type=self.lexer.source.get_source_type(),
+            current_token=self.lexer.current_token,
+            source_pos=self.start_of_object_pos,
+            source=self.source,
+            description=description,
             expected_token_type=expected
         )
