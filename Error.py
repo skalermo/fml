@@ -1,12 +1,11 @@
 import sys
 
 
-# Custom exception handler
+# Custom exception handler.
+# Works in terminal.
 def handler(exception_type, exception, traceback):
     print(exception.message)
-
-
-# sys.excepthook = handler
+sys.excepthook = handler
 
 
 class ErrorCode:
@@ -43,54 +42,84 @@ class ErrorDescription:
 
 
 class Error(Exception):
-    def __init__(self,
-                 error_code=None,
-                 current_token=None,
-                 source_pos=0,
-                 source=None,
-                 description='',
-                 expected_token_type=None):
+    def __init__(self, message):
+        self.message = message
+
         # hide traceback of pycharm
         sys.tracebacklimit = 0
 
-        # Error message structure:
-        #   1. source type, line, column
-        #   2. context
-        #   3. pointer
-        #   4. Error type, error message
-        #   5. Description
-        expected = ''
-        if error_code == ErrorCode.UNEXPECTED_TOKEN and expected_token_type is not None:
-            expected = f', expected {expected_token_type}'
-        source_type = source.get_source_type()
-        source.update_context_start(source_pos)
-        context = source.get_last_context()
-        if not context:
-            context = current_token.value
+        super().__init__(self.message)
 
+
+class LexerError(Error):
+    def __init__(
+            self,
+            error_code,
+            current_token,
+            source
+    ):
+
+        self.error_code = error_code
+        self.message = ''
+
+        source_type = source.get_source_type()
+        error_source = 'File "{source_type}", line {line}, column {column}\n'.format(
+            source_type=source_type,
+            line=source.line,
+            column=source.column
+        )
+
+        source.update_context_start(current_token.position.pos)
+        context = source.get_last_context()
+        context += source.current_char
+        length = min(len(context), source.column)
+        context += '\n'
+
+        pointer_line = ''.join([' '*(length-1), '^\n'])
+        message = f'{type(self).__name__}: {error_code}\n'
+
+        self.message = ''.join([error_source, context, pointer_line, message])
+        super().__init__(self.message)
+
+
+class ParserError(Error):
+    def __init__(self,
+                 error_code,
+                 current_token,
+                 source_pos,
+                 source,
+                 description,
+                 expected_token_type):
+
+        self.expected_token_type = expected_token_type
+        self.error_code = error_code
+        self.description = description
+        self.message = ''
+
+        source_type = source.get_source_type()
         error_source = 'File "{source_type}", line {line}, column {column}\n'.format(
             source_type=source_type,
             line=current_token.position.line,
             column=current_token.position.column
         )
+
+        source.update_context_start(source_pos)
+        context = source.get_last_context()
+        if not context:
+            context = current_token.value
+
         length = min(len(context), current_token.position.column)
-        pointer_line = ''.join([' '*(length-1), '^\n'])
         context += '\n'
+
+        pointer_line = ''.join([' '*(length-1), '^\n'])
+
+        expected = ''
+        if error_code == ErrorCode.UNEXPECTED_TOKEN and expected_token_type is not None:
+            expected = f', expected {expected_token_type}'
         message = f'{type(self).__name__}: {error_code}{expected}\n'
 
-        self.description = description
         if description:
             description += '\n'
 
-        self.expected_token_type = expected_token_type
-        self.error_code = error_code
         self.message = ''.join([error_source, context, pointer_line, message, description])
         super().__init__(self.message)
-
-
-class LexerError(Error):
-    pass
-
-
-class ParserError(Error):
-    pass
