@@ -14,6 +14,8 @@ from Parser.Objects.Operators import *
 class Parser:
     def __init__(self, source):
         self.lexer = Lexer(source)
+        self.source = source
+        self.start_of_object_pos = 0
 
     def expect(self, expected_token_type):
         if self.lexer.current_token.type != expected_token_type:
@@ -34,13 +36,15 @@ class Parser:
         while (parsed_object := self.try_to_parse_fun_definition()) or\
                 (parsed_object := self.try_to_parse_statement()):
             toplevel_objects.append(parsed_object)
+            self.start_of_object_pos = self.lexer.current_token.position.pos
+
+        self.expect(TokenType.ETX)
 
         return Program(toplevel_objects)
 
     def try_to_parse_fun_definition(self):
         if self.lexer.current_token.type != TokenType.FUN:
             return None
-        self.lexer.source.update_context_start(self.lexer.current_token.position.pos)
         self.lexer.build_next_token()
 
         fun_id = Identifier(self.expect(TokenType.ID))
@@ -75,8 +79,6 @@ class Parser:
         return Identifier(self.expect(TokenType.ID))
 
     def try_to_parse_statement(self):
-        self.lexer.source.update_context_start(self.lexer.current_token.position.pos)
-
         for try_to_parse_statement in [self.try_to_parse_while_loop,
                                        self.try_to_parse_for_loop,
                                        self.try_to_parse_if_statement,
@@ -552,9 +554,9 @@ class Parser:
     def error(self, error_code=None, expected=None, description=''):
         raise ParserError(
             error_code=error_code,
-            position=self.lexer.current_token.position,
-            context=self.lexer.source.get_last_context(),
-            source_type=self.lexer.source.get_source_type(),
+            current_token=self.lexer.current_token,
+            source_pos=self.start_of_object_pos,
+            source=self.source,
             description=description,
             expected_token_type=expected
         )

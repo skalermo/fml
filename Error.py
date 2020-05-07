@@ -3,7 +3,7 @@ import sys
 
 # Custom exception handler
 def handler(exception_type, exception, traceback):
-    print(Error.message)
+    print(exception.message)
 
 
 # sys.excepthook = handler
@@ -15,15 +15,6 @@ class ErrorCode:
 
     UNEXPECTED_TOKEN = 'Unexpected token'
     EXPECTED_NOT_NONE = 'No object parsed.'
-    EXPECTED_STATEMENT = 'Expected statement'
-    EXPECTED_EXPRESSION = 'Expected expression'
-    EXPECTED_ID = 'Expected identifier'
-    EXPECTED_SEMI = 'Expected semicolon'
-    EXPECTED_ITERABLE = 'Expected iterable'
-    EXPECTED_CONDITION = 'Condition is empty'
-    EXPECTED_MTRX_ROW = 'Expected matrix row'
-    EXPECTED_MTRX_ITEM = 'Expected matrix item'
-    EXPECTED_RVALUE = 'Expected rvalue'
 
     MTRX_ROW_LEN_MISMATCH = 'Matrix should have rows of the same length'
 
@@ -43,8 +34,8 @@ class ErrorDescription:
     EMPTY_IF_BODY = 'Body of if statement should not be empty.'
     EMPTY_ELSE_BODY = 'Body of else statement should not be empty.'
     EMPTY_RET_BODY = 'Expression to return should not be empty.'
-    NO_RVALUE = 'Expected rvalue, but got nothing.'
-    EMPTY_MTRX_ROW = 'Expected matrix row, but got nothing.'
+    NO_RVALUE = 'Expected rvalue.'
+    EMPTY_MTRX_ROW = 'Expected matrix row.'
     NO_ARGUMENT = 'No argument found.'
     NO_INDEX = 'No index found.'
     NO_ITEM = 'No matrix item found.'
@@ -54,9 +45,9 @@ class ErrorDescription:
 class Error(Exception):
     def __init__(self,
                  error_code=None,
-                 position=None,
-                 context='',
-                 source_type='',
+                 current_token=None,
+                 source_pos=0,
+                 source=None,
                  description='',
                  expected_token_type=None):
         # hide traceback of pycharm
@@ -71,8 +62,19 @@ class Error(Exception):
         expected = ''
         if error_code == ErrorCode.UNEXPECTED_TOKEN and expected_token_type is not None:
             expected = f', expected {expected_token_type}'
-        error_source = f'File "{source_type}", line {position.line}, column {position.column}\n'
-        pointer_line = ''.join([' '*(len(context)-1), '^\n'])
+        source_type = source.get_source_type()
+        source.update_context_start(source_pos)
+        context = source.get_last_context()
+        if not context:
+            context = current_token.value
+
+        error_source = 'File "{source_type}", line {line}, column {column}\n'.format(
+            source_type=source_type,
+            line=current_token.position.line,
+            column=current_token.position.column
+        )
+        length = min(len(context), current_token.position.column)
+        pointer_line = ''.join([' '*(length-1), '^\n'])
         context += '\n'
         message = f'{type(self).__name__}: {error_code}{expected}\n'
 
