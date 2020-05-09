@@ -9,7 +9,7 @@ class Matrix(AST):
         return self.rows[item]
 
     def __len__(self):
-        return len(self.rows)
+        return sum([len(row) for row in self.rows])
 
     def __repr__(self):
         return f'{self.__class__.__name__}'
