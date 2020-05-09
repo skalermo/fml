@@ -2,7 +2,7 @@
 #
 # Environment = Outer scope + Global scope + Call stack.
 #
-# Outer scope is at lowest level.
+# Outer scope is at the lowest level.
 # Outer scope contains built-in functions and variables
 # and can be seen everywhere in program.
 # Outer scope's variables or functions cannot be changed by user,
@@ -27,7 +27,7 @@
 # in case there was new function call.
 
 
-from Parser.Objects.Identifier import Identifier
+from Objects.Identifier import Identifier
 
 
 class Scope:
@@ -54,13 +54,25 @@ class Scope:
         return value
 
 
+class GlobalScope(Scope):
+    # Class for outer and global scopes
+    # The only difference from normal Scope is that
+    # it contains table of function definitions
+
+    def __init__(self, parent_scope=None):
+        super().__init__(parent_scope)
+
+        self.fun_table = {}
+
+
 class Environment:
     def __init__(self):
-        self.outer_scope = Scope()
-        self.global_scope = Scope(self.outer_scope)
+        self.outer_scope = GlobalScope()
+        self._add_builtin_fun_defs()
+
+        self.global_scope = GlobalScope(self.outer_scope)
         self.current_scope = self.global_scope
         self.call_stack = []
-        self.fun_table = {}
         self.fun_call_nesting = 0
 
     def add_var(self, var: Identifier, evaluated_value):
@@ -113,3 +125,9 @@ class Environment:
         # restore scope before function call
         self.current_scope = self.call_stack.pop() \
             if self.call_stack else self.global_scope
+
+    def add_fun_def(self):
+        pass
+
+    def _add_builtin_fun_defs(self):
+        pass
