@@ -1,10 +1,10 @@
 import unittest
 from Parser.Parser import Parser
 from Source.Source import StringSource
-from Parser.Objects.Operators import BinaryOperator
-from Parser.Objects.Identifier import Identifier
+from Objects.Operators import BinaryOperator
+from Objects.Identifier import Identifier
 from Lexer.Token import Token, TokenType
-from Parser.Objects.Scalar import Scalar
+from Objects.Scalar import Scalar
 
 
 def create_expected_binary_operator(parameters):

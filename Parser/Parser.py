@@ -1,14 +1,14 @@
 from Error import ParserError, ErrorCode, ErrorDescription
 from Lexer.Lexer import Lexer
 from Lexer.Token import TokenType
-from Parser.Objects.Program import Program
-from Parser.Objects.Function import *
-from Parser.Objects.Statement import *
-from Parser.Objects.Identifier import *
-from Parser.Objects.String import *
-from Parser.Objects.Matrix import *
-from Parser.Objects.Scalar import *
-from Parser.Objects.Operators import *
+from Objects.Program import Program
+from Objects.Function import *
+from Objects.Statement import *
+from Objects.Identifier import *
+from Objects.String import *
+from Objects.Matrix import *
+from Objects.Scalar import *
+from Objects.Operators import *
 
 
 class Parser:
