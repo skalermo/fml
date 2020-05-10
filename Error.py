@@ -16,6 +16,7 @@ class ErrorCode:
     EXPECTED_NOT_NONE = 'No object parsed.'
 
     MTRX_ROW_LEN_MISMATCH = 'Matrix should have rows of the same length'
+    ASSIGNTONOTID = 'Cannot assign to non-identifier'
 
     ID_NOT_FOUND = 'Identifier not found'
     DUPLICATE_ID = 'Duplicate id found'
@@ -124,3 +125,8 @@ class ParserError(Error):
 
         self.message = ''.join([error_source, context, pointer_line, message, description])
         super().__init__(self.message)
+
+
+class InterpreterError(Error):
+    def __init__(self, message):
+        super().__init__(message)

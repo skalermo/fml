@@ -1,7 +1,7 @@
 import unittest
 from Parser.Parser import Parser
 from Source.Source import StringSource
-from Objects.Operators import BinaryOperator
+from Objects.Operators import BinaryOperator, Assignment
 from Objects.Identifier import Identifier
 from Lexer.Token import Token, TokenType
 from Objects.Scalar import Scalar
@@ -17,11 +17,15 @@ def create_expected_binary_operator(parameters):
     }
 
     for param in parameters:
-        binop = BinaryOperator(
-            lvalue=actions[param[0][0]](param[0][1]),
-            op=actions[param[1][0]](param[1][1]),
-            rvalue=actions[param[2][0]](param[2][1])
-        )
+        if param[1][1] == '=':
+            binop = Assignment(actions[param[0][0]](param[0][1]),
+                               actions[param[2][0]](param[2][1]))
+        else:
+            binop = BinaryOperator(
+                lvalue=actions[param[0][0]](param[0][1]),
+                op=actions[param[1][0]](param[1][1]),
+                rvalue=actions[param[2][0]](param[2][1])
+            )
 
     return binop
 
@@ -32,6 +36,10 @@ class TestOperatorConnectivity(unittest.TestCase):
         method = 'visit_and_compare_' + actual.__class__.__name__
         visitor = getattr(self, method)
         return visitor(expected, actual)
+
+    def visit_and_compare_Assignment(self, expected, actual):
+        self.visit_and_compare(expected.lvalue, actual.lvalue)
+        self.visit_and_compare(expected.rvalue, actual.rvalue)
 
     def visit_and_compare_BinaryOperator(self, expected, actual):
         self.assertEqual(expected.op.type, actual.op.type)

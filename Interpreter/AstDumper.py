@@ -53,6 +53,10 @@ class AstDumper(NodeVisitor, TextTreeStructure):
             self.add_child(lambda: self.visit(if_statement.else_statement),
                            if_statement.else_statement)
 
+    def visit_Assignment(self, assignment):
+        self.add_child(lambda: self.visit(assignment.lvalue), assignment.lvalue)
+        self.add_child(lambda: self.visit(assignment.rvalue), assignment.rvalue)
+
     def visit_BinaryOperator(self, bin_op):
         self.add_child(lambda: self.visit(bin_op.lvalue), bin_op.lvalue)
         self.add_child(lambda: self.visit(bin_op.rvalue), bin_op.rvalue)

@@ -249,8 +249,9 @@ class Parser:
 
         if self.lexer.current_token.type != TokenType.ASSIGN:
             return lvalue
+        if not isinstance(lvalue, Identifier):
+            self.error(error_code=ErrorCode.ASSIGNTONOTID)
 
-        op = self.lexer.current_token
         self.lexer.build_next_token()
 
         # Allow nested assignments (right connectivity)
@@ -259,7 +260,7 @@ class Parser:
             error_description=ErrorDescription.NO_RVALUE
         )
 
-        return BinaryOperator(lvalue, op, rvalue)
+        return Assignment(lvalue, rvalue)
 
     def try_to_parse_condition_expression(self):
         lvalue = self.try_to_parse_andExpression()
