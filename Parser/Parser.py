@@ -394,14 +394,14 @@ class Parser:
         for try_to_parse_factor in [self.try_to_parse_constant,
                                     self.try_to_parse_non_constant,
                                     self.try_to_parse_expression_inside_parentheses]:
-            if factor := try_to_parse_factor():
+            if (factor := try_to_parse_factor()) is not None:
                 return factor
         return None
 
     def try_to_parse_constant(self):
         for try_to_parse_constant in [self.try_to_parse_scalar,
                                       self.try_to_parse_matrix]:
-            if constant := try_to_parse_constant():
+            if (constant := try_to_parse_constant()) is not None:
                 return constant
         return None
 
@@ -411,7 +411,7 @@ class Parser:
 
         for parse_method in [self.try_to_parse_function_call,
                              self.try_to_parse_matrix_subscripting]:
-            if non_constant := parse_method(id):
+            if (non_constant := parse_method(id)) is not None:
                 return non_constant
         return id
 
@@ -439,13 +439,21 @@ class Parser:
             return None
         self.lexer.build_next_token()
 
-        rows = [self.try_to_parse_matrix_row()]
+        rows = self.try_to_parse_matrix_rows()
+
+        self.expect(TokenType.RBRACK)
+        return Matrix(rows)
+
+    def try_to_parse_matrix_rows(self):
+        if (row := self.try_to_parse_row()) is None:
+            return []
+        rows = [row]
 
         while self.lexer.current_token.type == TokenType.SEMI:
             self.lexer.build_next_token()
 
             matrix_row = self.expect_not_none(
-                self.try_to_parse_matrix_row(),
+                self.try_to_parse_row(),
                 error_description=ErrorDescription.EMPTY_MTRX_ROW
             )
 
@@ -455,10 +463,24 @@ class Parser:
                     error_code=ErrorCode.MTRX_ROW_LEN_MISMATCH,
                     description='Rows in matrix should have same length.'
                 )
+        return rows
 
-        self.expect(TokenType.RBRACK)
+    def try_to_parse_row(self):
+        if (expression := self.try_to_parse_condition_expression()) is None:
+            return None
+        expressions = [expression]
 
-        return Matrix(rows)
+        while self.lexer.current_token.type == TokenType.COMMA:
+            self.lexer.build_next_token()
+
+            expression = self.expect_not_none(
+                self.try_to_parse_condition_expression(),
+                error_description=ErrorDescription.NO_ITEM
+            )
+
+            expressions.append(expression)
+
+        return MatrixRow(expressions)
 
     def try_to_parse_id(self):
         if self.lexer.current_token.type != TokenType.ID:
@@ -533,23 +555,6 @@ class Parser:
         self.lexer.build_next_token()
 
         return String(token_string)
-
-    def try_to_parse_matrix_row(self):
-        if (expression := self.try_to_parse_condition_expression()) is None:
-            return None
-        expressions = [expression]
-
-        while self.lexer.current_token.type == TokenType.COMMA:
-            self.lexer.build_next_token()
-
-            expression = self.expect_not_none(
-                self.try_to_parse_condition_expression(),
-                error_description=ErrorDescription.NO_ITEM
-            )
-
-            expressions.append(expression)
-
-        return MatrixRow(expressions)
 
     def error(self, error_code=None, expected=None, description=''):
         raise ParserError(
