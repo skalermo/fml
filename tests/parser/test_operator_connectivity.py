@@ -10,9 +10,9 @@ from Objects.Scalar import Scalar
 def create_expected_binary_operator(parameters):
     binop = None
     actions = {
-        'scalar': lambda value: Scalar(Token(TokenType.SCALAR, value)),
+        'scalar': lambda value: Scalar(value),
         'op': lambda type: Token(TokenType(type)),
-        'id': lambda id: Identifier(Token(Token(TokenType.ID, id))),
+        'id': lambda id: Identifier(Token(TokenType.ID, id)),
         'prev': lambda _: binop
     }
 
@@ -48,10 +48,10 @@ class TestOperatorConnectivity(unittest.TestCase):
         self.visit_and_compare(expected.rvalue, actual.rvalue)
 
     def visit_and_compare_Identifier(self, expected, actual):
-        self.assertEqual(expected.token.value, actual.token.value)
+        self.assertEqual(expected.value, actual.value)
 
     def visit_and_compare_Scalar(self, expected, actual):
-        self.assertEqual(expected.token.value, actual.token.value)
+        self.assertEqual(expected.value, actual.value)
 
     def test_assignment_expression(self):
         source = 'a=b=c=0;'
