@@ -430,7 +430,7 @@ class Parser:
     def try_to_parse_scalar(self):
         if self.lexer.current_token.type != TokenType.SCALAR:
             return None
-        scalar = Scalar(self.lexer.current_token)
+        scalar = Scalar(self.lexer.current_token.value)
         self.lexer.build_next_token()
 
         return scalar
@@ -555,7 +555,7 @@ class Parser:
         token_string = self.lexer.current_token
         self.lexer.build_next_token()
 
-        return String(token_string)
+        return String(token_string.value)
 
     def error(self, error_code=None, expected=None, description=''):
         raise ParserError(

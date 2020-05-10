@@ -42,4 +42,4 @@ class MatrixSubscripting(AST):
         self.column_index = idx2
 
     def __repr__(self):
-        return f'{self.__class__.__name__}: {self.id.token.value}'
+        return f'{self.__class__.__name__}: {self.id.value}'
