@@ -250,17 +250,18 @@ class Parser:
         if self.lexer.current_token.type != TokenType.ASSIGN:
             return lvalue
         if not isinstance(lvalue, Identifier):
-            self.error(error_code=ErrorCode.ASSIGNTONOTID)
+            self.error(error_code=ErrorCode.ASSIGN_TO_NOT_ID)
 
         self.lexer.build_next_token()
 
         # Allow nested assignments (right connectivity)
-        rvalue = self.expect_not_none(
-            self.try_to_parse_expression(),
-            error_description=ErrorDescription.NO_RVALUE
-        )
+        for try_to_parse in [self.try_to_parse_string,
+                             self.try_to_parse_expression]:
+            if (rvalue := try_to_parse()) is not None:
+                return Assignment(lvalue, rvalue)
 
-        return Assignment(lvalue, rvalue)
+        self.error(error_code=ErrorCode.EXPECTED_NOT_NONE,
+                   description=ErrorDescription.NO_RVALUE)
 
     def try_to_parse_condition_expression(self):
         lvalue = self.try_to_parse_andExpression()
