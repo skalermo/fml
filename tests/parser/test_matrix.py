@@ -71,20 +71,20 @@ class TestMatrixFails(unittest.TestCase):
                     None,
                     ErrorDescription.EMPTY_MTRX_ROW)
 
-    def test_nested_matrices(self):
+    def test_nested_matrices_without_semi(self):
         m = '[[[[]]]]'
         should_fail(self, m, ErrorCode.UNEXPECTED_TOKEN, TokenType.SEMI)
 
         m = '[[[]]]]'
         should_fail(self, m, ErrorCode.UNEXPECTED_TOKEN, TokenType.SEMI)
-
-        m = '[[[[]]]'
-        should_fail(self, m, ErrorCode.UNEXPECTED_TOKEN, TokenType.RBRACK)
-
         m = '[' \
             '[], [], []' \
             ']'
         should_fail(self, m, ErrorCode.UNEXPECTED_TOKEN, TokenType.SEMI)
+
+    def test_nested_matrices(self):
+        m = '[[[[]]]'
+        should_fail(self, m, ErrorCode.UNEXPECTED_TOKEN, TokenType.RBRACK)
 
         m = '[' \
             '[], [], [];' \
