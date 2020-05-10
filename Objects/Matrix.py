@@ -4,6 +4,8 @@ from Interpreter.Ast import AST
 class Matrix(AST):
     def __init__(self, rows):
         self.rows = rows
+        # shape = (rows, columns)
+        self.shape = (len(rows), 0 if not rows else len(rows[0]))
 
     def __getitem__(self, item):
         return self.rows[item]
