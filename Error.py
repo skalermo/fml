@@ -69,7 +69,8 @@ class LexerError(Error):
             column=source.column
         )
 
-        source.update_context_start(current_token.position.pos)
+        if current_token is not None:
+            source.update_context_start(current_token.position.pos)
         context = source.get_last_context()
         context += source.current_char
         length = min(len(context), source.column)
