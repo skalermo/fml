@@ -1,5 +1,14 @@
 from Interpreter.Ast import NodeVisitor
 from Interpreter.TextTreeStructure import TextTreeStructure
+from Source.Source import Source
+from Parser.Parser import Parser
+
+
+def dumpAST(source: Source):
+    parser = Parser(source)
+    program = parser.parse_program()
+    ast_dumper = AstDumper()
+    ast_dumper.add_child(lambda: ast_dumper.visit(program), str(program))
 
 
 class AstDumper(NodeVisitor, TextTreeStructure):
@@ -43,6 +52,10 @@ class AstDumper(NodeVisitor, TextTreeStructure):
         if if_statement.else_statement is not None:
             self.add_child(lambda: self.visit(if_statement.else_statement),
                            if_statement.else_statement)
+
+    def visit_Assignment(self, assignment):
+        self.add_child(lambda: self.visit(assignment.lvalue), assignment.lvalue)
+        self.add_child(lambda: self.visit(assignment.rvalue), assignment.rvalue)
 
     def visit_BinaryOperator(self, bin_op):
         self.add_child(lambda: self.visit(bin_op.lvalue), bin_op.lvalue)

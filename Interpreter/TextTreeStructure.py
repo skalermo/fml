@@ -1,25 +1,29 @@
-# This is a port of the clang TextTreeStructure class. Link to the source below.
+# This is python port of the clang TextTreeStructure class.
+# Link to the original source below.
 # https://clang.llvm.org/doxygen/TextNodeDumper_8h_source.html
 #
 #
-# Thanks to Witold Wysota for provided source code.
+# Thanks to Witold Wysota for provided simplified C++ source code.
 
 
 from sys import stdout
+from typing import List, Tuple, Callable
 
 
 class TextTreeStructure:
     def __init__(self):
-        self.pending = []
+        self.pending: List[Tuple[Callable, str]] = []
         self.top_level = True
         self.first_child = True
-        self.prefix = []
+        self.prefix: List[str] = []
 
-    def add_child(self, do_add_child, label=''):
+    def add_child(self, do_add_child: Callable, label: str = ''):
         if self.top_level:
             self.top_level = False
 
+            # print top level object
             stdout.write(label)
+
             do_add_child()
 
             while self.pending:
@@ -37,9 +41,9 @@ class TextTreeStructure:
             self.pending[-1] = (do_add_child, label,)
         self.first_child = False
 
-    def dump_with_indent(self, is_last_child, do_add_child, label):
+    def dump_with_indent(self, is_last_child: bool, do_add_child: Callable, label: str):
         stdout.write('\n')
-        stdout.write(Colors.Blue)
+        # stdout.write(Colors.Blue)
         colored(Colors.Blue, '{prefix}{char}-'.format(
             prefix=''.join(self.prefix),
             char='`' if is_last_child else '|'
@@ -59,10 +63,6 @@ class TextTreeStructure:
             self.pending.pop()
         self.prefix.pop()
         self.prefix.pop()
-
-
-def colored(color, text):
-    stdout.write(f'{color}{text}{Colors.Reset}')
 
 
 class Colors:
@@ -85,3 +85,7 @@ class Colors:
     Bright_White = '\u001b[37;1m'
 
     Reset = '\u001b[0m'
+
+
+def colored(color: str, text: str):
+    stdout.write(f'{color}{text}{Colors.Reset}')

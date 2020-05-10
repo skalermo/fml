@@ -1,6 +1,6 @@
 import unittest
 from Lexer.Token import TokenType
-from Error import ErrorCode
+from Error import ErrorCode, ErrorDescription
 from tests.parser.utils import should_fail
 
 
@@ -22,7 +22,10 @@ class TestForLoopFails(unittest.TestCase):
 
     def test_no_iterable(self):
         loop = 'for (i in );'
-        should_fail(self, loop, ErrorCode.EXPECTED_ITERABLE)
+        should_fail(self, loop,
+                    ErrorCode.EXPECTED_NOT_NONE,
+                    None,
+                    ErrorDescription.NO_ITERABLE)
 
     def test_no_rparen(self):
         loop = 'for (i in [a, b, c];'

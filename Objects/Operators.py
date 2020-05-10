@@ -23,3 +23,12 @@ class UnaryOperator(Evaluable):
 
     def __repr__(self):
         return f'{self.__class__.__name__}: {self.op.value}'
+
+
+class Assignment(Evaluable):
+    def __init__(self, lvalue, rvalue):
+        self.lvalue = lvalue
+        self.rvalue = rvalue
+
+    def __repr__(self):
+        return f'{self.__class__.__name__}: ='

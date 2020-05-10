@@ -210,9 +210,8 @@ class Lexer:
     def error(self, error_code=None):
         raise LexerError(
             error_code=error_code,
-            position=Position(self.source),
-            context=self.source.get_last_context(),
-            source_type=self.source.get_source_type(),
+            source=self.source,
+            current_token=self.current_token
         )
 
     # def error(self, error_code=None):
