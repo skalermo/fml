@@ -15,11 +15,11 @@ class TestAssignmentFails(unittest.TestCase):
 
     def test_no_id_assign(self):
         a = '1 = []'
-        should_fail(self, a, ErrorCode.ASSIGNTONOTID)
+        should_fail(self, a, ErrorCode.ASSIGN_TO_NOT_ID)
 
     def test_nested_assign_no_id(self):
         a = 'var1 = var2 = 2 = var3 = 0;'
-        should_fail(self, a, ErrorCode.ASSIGNTONOTID)
+        should_fail(self, a, ErrorCode.ASSIGN_TO_NOT_ID)
 
 
 if __name__ == '__main__':
