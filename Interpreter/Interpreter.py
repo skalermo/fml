@@ -1,7 +1,7 @@
 from Interpreter.Ast import NodeVisitor
 from Interpreter.Environment import Environment
 from Objects.Scalar import Scalar
-from Objects.Matrix import Matrix, MatrixRow
+from Objects.Matrix import Matrix
 from Objects.String import String
 from Error import InterpreterError
 from Error import ErrorCode
@@ -38,6 +38,13 @@ class Interpreter(NodeVisitor):
             '==': self.equal,
             '!=': self.not_equal,
             '**': self.pow
+        }
+
+    def _get_unary_operations(self):
+        return {
+            'not': self.negation,
+            '+': lambda x: x,
+            '-': lambda: None
         }
 
     def interpret(self, program):
@@ -121,21 +128,42 @@ class Interpreter(NodeVisitor):
         return scalar
 
     def visit_String(self, string):
-        return str
+        return string
 
     # binary operations
 
     def logic_and(self, a, b):
-        return a or b
+        return Scalar(int(a and b))
 
     def int_division(self, a, b):
-        return a // b
+        if isinstance(a, Scalar) and isinstance(b, Scalar):
+            if b.value == 0:
+                self.error(error_code=ErrorCode.ZERO_DIVISION)
+            return Scalar(a.value // b.value)
+        return self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+                          description=f'Addition on {type(a)} and {type(b)}')
 
     def modulo(self, a, b):
-        return a % b
+        if isinstance(a, Scalar) and isinstance(b, Scalar):
+            if b.value == 0:
+                self.error(error_code=ErrorCode.ZERO_DIVISION)
+            return Scalar(a.value % b.value)
+        return self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+                          description=f'Addition on {type(a)} and {type(b)}')
+
+    def float_division(self, a, b):
+        if isinstance(a, Scalar) and isinstance(b, Scalar):
+            if b.value == 0:
+                self.error(error_code=ErrorCode.ZERO_DIVISION)
+            return Scalar(a.value / b.value)
+        return self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+                          description=f'Addition on {type(a)} and {type(b)}')
+
+    def negation(self, a):
+        return not a
 
     def logic_or(self, a, b):
-        return a or b
+        return Scalar(int(a or b))
 
     def add(self, a, b):
         if isinstance(a, Scalar) and isinstance(b, Scalar):
@@ -144,7 +172,9 @@ class Interpreter(NodeVisitor):
             if a.shape != b.shape:
                 self.error(error_code=ErrorCode.MATRIX_SHAPE_MISMATCH,
                            description=f'{a.shape} != {b.shape}')
-            return self.add_matrices(a, b)
+            return self.for_each_element_do(self.add, a, b)
+        if isinstance(a, Matrix) and isinstance(b, Scalar):
+            return self.for_each_element_do(self.add, a, b)
 
         self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
                    description=f'Addition on {type(a)} and {type(b)}')
@@ -153,41 +183,81 @@ class Interpreter(NodeVisitor):
         if isinstance(a, Scalar) and isinstance(b, Scalar):
             return Scalar(a.value - b.value)
         if isinstance(a, Matrix) and isinstance(b, Matrix):
-            pass
+            if a.shape != b.shape:
+                self.error(error_code=ErrorCode.MATRIX_SHAPE_MISMATCH,
+                           description=f'{a.shape} != {b.shape}')
+            return self.for_each_element_do(self.sub, a, b)
         self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
                    description=f'Subtraction on {type(a)} and {type(b)}')
 
     def mul(self, a, b):
-        return a * b
-
-    def float_division(self, a, b):
-        return a / b
+        if isinstance(a, Scalar) and isinstance(b, Scalar):
+            return Scalar(a.value - b.value)
+        if isinstance(a, Matrix) and isinstance(b, Matrix):
+            if a.shape[1] != b.shape[0]:
+                self.error(error_code=ErrorCode.MATRIX_DOT_SHAPE_MISMATCH,
+                           description=f'Shapes: {a.shape} and {b.shape}')
+            return self.dot(a, b)
+        self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+                   description=f'Multiplication on {type(a)} and {type(b)}')
 
     def less(self, a, b):
-        pass
+        if isinstance(a, Scalar) and isinstance(b, Scalar):
+            return Scalar(int(a.value < b.value))
+        self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+                   description=f'Test if less on {type(a)} and {type(b)}')
 
     def greater(self, a, b):
-        pass
+        if isinstance(a, Scalar) and isinstance(b, Scalar):
+            return Scalar(int(a.value > b.value))
+        self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+                   description=f'Test if greater on {type(a)} and {type(b)}')
 
     def less_or_equal(self, a, b):
-        pass
+        if isinstance(a, Scalar) and isinstance(b, Scalar):
+            return Scalar(int(a.value <= b.value))
+        self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+                   description=f'Test if less or equal on {type(a)} and {type(b)}')
 
     def greater_or_equal(self, a, b):
-        pass
+        if isinstance(a, Scalar) and isinstance(b, Scalar):
+            return Scalar(int(a.value >= b.value))
+        self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+                   description=f'Test if greater or equal on {type(a)} and {type(b)}')
 
     def equal(self, a, b):
-        pass
+        if type(a) != type(b):
+            self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+                       description=f'Test if equal on {type(a)} and {type(b)}')
+        return a == b
 
     def not_equal(self, a, b):
-        pass
+        if type(a) != type(b):
+            self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+                       description=f'Test if not equal on {type(a)} and {type(b)}')
+        return a != b
 
     def pow(self, a, b):
-        pass
+        if isinstance(a, Scalar) and isinstance(b, Scalar):
+            return Scalar(a.value ** b.value)
+        if isinstance(a, Matrix) and isinstance(b, Scalar):
+            if not b.value.is_integer():
+                self.error(error_code=ErrorCode.MATRIX_FLOAT_POW,
+                           description=f'The float is {b.value}')
+            result = a
+            for _ in range(int(b.value)-1):
+                result = self.dot(result, a)
+        self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+                   description=f'Power operation on {type(a)} and {type(b)}')
 
-    # operations on matrices
-    def add_matrices(self, a, b):
-        # sum up elements on same positions
-        # return new matrix
+    def for_each_element_do(self, operation, a, b):
+        if isinstance(b, Scalar):
+            if not len(a):
+                self.error(error_code=ErrorCode.EMPTY_MTRX_OP)
+            for row_of_a in a.rows:
+                for i in range(a.shape[1]):
+                    row_of_a[i] = operation(row_of_a[i], b)
+            return a
 
         # matrix is empty
         if not len(a):
@@ -195,11 +265,14 @@ class Interpreter(NodeVisitor):
 
         rows = []
         for row_of_a, row_of_b in zip(a.rows, b.rows):
-            summed_elements = []
+            elements = []
             for element_in_row_of_a, element_in_row_of_b in zip(row_of_a, row_of_b):
-                summed_elements.append(self.add(element_in_row_of_a, element_in_row_of_b))
-            rows.append(MatrixRow(summed_elements))
+                elements.append(operation(element_in_row_of_a, element_in_row_of_b))
+            rows.append(elements)
         return Matrix(rows)
+
+    def dot(self, a, b):
+        pass
 
     def error(self, error_code=None, id='', description=''):
         raise InterpreterError(error_code, id, description)
