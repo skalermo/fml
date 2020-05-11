@@ -28,6 +28,7 @@
 
 
 from Objects.Identifier import Identifier
+from Objects.Function import FunctionDefinition
 
 
 class Scope:
@@ -63,6 +64,9 @@ class GlobalScope(Scope):
         super().__init__(parent_scope)
 
         self.fun_table = {}
+
+    def add_fun_def(self, fun_def: FunctionDefinition):
+        self.fun_table[fun_def.get_name()] = fun_def
 
 
 class Environment:
@@ -126,8 +130,8 @@ class Environment:
         self.current_scope = self.call_stack.pop() \
             if self.call_stack else self.global_scope
 
-    def add_fun_def(self):
-        pass
+    def add_fun_def(self, fun_def):
+        self.global_scope.add_fun_def(fun_def)
 
     def _add_builtin_fun_defs(self):
         pass
