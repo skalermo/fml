@@ -482,7 +482,7 @@ class Parser:
 
             expressions.append(expression)
 
-        return MatrixRow(expressions)
+        return expressions
 
     def try_to_parse_id(self):
         if self.lexer.current_token.type != TokenType.ID:
