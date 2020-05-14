@@ -344,7 +344,8 @@ class Interpreter(NodeVisitor):
         rows = []
         for row_of_a, row_of_b in zip(a.rows, b.rows):
             row = MatrixRow([])
-            for element_in_row_of_a, element_in_row_of_b in zip(row_of_a, row_of_b):
+            for element_in_row_of_a, element_in_row_of_b\
+                    in zip(row_of_a.elements, row_of_b.elements):
                 row.append(operation(element_in_row_of_a, element_in_row_of_b))
             rows.append(row)
         return Matrix(rows)
