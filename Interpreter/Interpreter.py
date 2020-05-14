@@ -1,7 +1,7 @@
 from Interpreter.Ast import NodeVisitor
 from Interpreter.Environment import Environment
 from Objects.Scalar import Scalar
-from Objects.Matrix import Matrix
+from Objects.Matrix import Matrix, MatrixRow
 from Objects.String import String
 from Error import InterpreterError
 from Error import ErrorCode
@@ -19,7 +19,8 @@ class ReturnException(Exception):
 class Interpreter(NodeVisitor):
     def __init__(self):
         self.env = None
-        self.operations = None
+        self.binary_operations = None
+        self.unary_operations = None
 
     def _get_binary_operations(self):
         return {
@@ -43,8 +44,8 @@ class Interpreter(NodeVisitor):
     def _get_unary_operations(self):
         return {
             'not': self.negation,
-            '+': lambda x: x,
-            '-': lambda: None
+            '+': self.unary_plus,
+            '-': self.unary_minus
         }
 
     def find_var(self, id):
@@ -57,7 +58,8 @@ class Interpreter(NodeVisitor):
 
     def visit_Program(self, program):
         self.env = Environment()
-        self.operations = self._get_binary_operations()
+        self.binary_operations = self._get_binary_operations()
+        self.unary_operations = self._get_unary_operations()
 
         try:
             for object in program.objects:
@@ -107,10 +109,12 @@ class Interpreter(NodeVisitor):
         op = bin_op.op
         rvalue = self.visit(bin_op.rvalue)
 
-        return self.operations[op.value](lvalue, rvalue)
+        return self.binary_operations[op.value](lvalue, rvalue)
 
     def visit_UnaryOperator(self, unary_op):
-        pass
+        rvalue = self.visit(unary_op.rvalue)
+        op = unary_op.op
+        return self.unary_operations[op.value](rvalue)
 
     def visit_FunctionCall(self, fun_call):
         pass
@@ -137,15 +141,24 @@ class Interpreter(NodeVisitor):
             if column_idx == 'colon':
                 return matrix.get_row(int(row_idx.to_py()))
 
-            # if int(column_idx.to_py()) >= matrix.shape[1]:
-            #     self.error(error_code=ErrorCode.OUT_OF_RANGE,
-            #                description=f'Column index of matrix {mtrx_subs.id}')
-            return matrix[int(row_idx.to_py())][int(column_idx.to_py())]
+            if (row := matrix[int(row_idx.to_py())]) is None:
+                self.error(error_code=ErrorCode.OUT_OF_RANGE,
+                           description=f'Row index {int(row_idx.to_py())}'
+                                       f' in matrix {mtrx_subs.id}')
+            if (item := row[int(column_idx.to_py())]) is None:
+                self.error(error_code=ErrorCode.OUT_OF_RANGE,
+                           description=f'Column index {int(column_idx.to_py())}'
+                                       f' in matrix {mtrx_subs.id}')
+            return item
 
         if row_idx is not None:
             if row_idx == 'colon':
                 return matrix.copy()
-            return matrix.get_item_by_single_idx(int(row_idx.to_py()))
+            if (item := matrix.get_item_by_single_idx(int(row_idx.to_py()))) is None:
+                self.error(error_code=ErrorCode.OUT_OF_RANGE,
+                           description=f'Index {int(row_idx.to_py())}'
+                                       f' in matrix {mtrx_subs.id}')
+            return item
 
     def visit_MatrixIndex(self, idx):
         if idx.is_colon:
@@ -153,7 +166,14 @@ class Interpreter(NodeVisitor):
         return self.visit(idx.expression)
 
     def visit_Matrix(self, matrix):
+        for i in range(len(matrix.rows)):
+            matrix[i] = self.visit(matrix[i])
         return matrix
+
+    def visit_MatrixRow(self, row):
+        for i in range(len(row)):
+            row[i] = self.visit(row[i])
+        return row
 
     def visit_Identifier(self, id):
         if (value := self.env.get_var(id)) is None:
@@ -200,6 +220,22 @@ class Interpreter(NodeVisitor):
 
     def negation(self, a):
         return Scalar(int(not a))
+
+    def unary_plus(self, a):
+        if isinstance(a, String):
+            self.error(error_code=ErrorCode.UNSUPPORTED_UNARY_OPERATION,
+                       description=f'Type == String')
+        return a
+
+    def unary_minus(self, a):
+        if isinstance(a, String):
+            self.error(error_code=ErrorCode.UNSUPPORTED_UNARY_OPERATION,
+                       description=f'Type == String')
+        if isinstance(a, Scalar):
+            a.value = -a.value
+        if isinstance(a, Matrix):
+            a = self.mul(a, Scalar(-1))
+        return a
 
     def logic_or(self, a, b):
         return Scalar(int(a or b))
@@ -307,23 +343,23 @@ class Interpreter(NodeVisitor):
 
         rows = []
         for row_of_a, row_of_b in zip(a.rows, b.rows):
-            elements = []
+            row = MatrixRow([])
             for element_in_row_of_a, element_in_row_of_b in zip(row_of_a, row_of_b):
-                elements.append(operation(element_in_row_of_a, element_in_row_of_b))
-            rows.append(elements)
+                row.append(operation(element_in_row_of_a, element_in_row_of_b))
+            rows.append(row)
         return Matrix(rows)
 
     def dot(self, a, b):
-        result = []
+        rows = []
         for i in range(a.shape[0]):
-            result.append([])
+            rows.append(MatrixRow([]))
             for j in range(b.shape[1]):
-                result[i].append(Scalar(0))
+                rows[i].append(Scalar(0))
                 for k in range(b.shape[0]):
                     mul = self.mul(a[i][k], b[k][j])
-                    add = self.add(result[i][j], mul)
-                    result[i][j] = add
-        return Matrix(result)
+                    add = self.add(rows[i][j], mul)
+                    rows[i][j] = add
+        return Matrix(rows)
 
     def error(self, error_code=None, id='', description=''):
         raise InterpreterError(error_code, id, description)
