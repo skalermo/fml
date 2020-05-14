@@ -62,18 +62,18 @@ class Matrix(AST):
 
 class MatrixRow:
     def __init__(self, expressions):
-        self.expressions = expressions
+        self.elements = expressions
 
     def __getitem__(self, item):
         if item >= len(self):
             return None
-        return self.expressions[item]
+        return self.elements[item]
 
     def __setitem__(self, key, value):
-        self.expressions[key] = value
+        self.elements[key] = value
 
     def __len__(self):
-        return len(self.expressions)
+        return len(self.elements)
 
     def __bool__(self):
         return bool(len(self))
@@ -85,10 +85,10 @@ class MatrixRow:
         pass
 
     def to_py(self):
-        return [expression.to_py() for expression in self.expressions]
+        return [expression.to_py() for expression in self.elements]
 
     def append(self, param):
-        self.expressions.append(param)
+        self.elements.append(param)
 
 
 class MatrixIndex(AST):
