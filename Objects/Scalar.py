@@ -5,7 +5,7 @@ class Scalar(AST):
     def __init__(self, value):
         self.value = value
 
-    def __repr__(self):
+    def to_py(self):
         return self.value
 
     def __bool__(self):

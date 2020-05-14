@@ -16,8 +16,11 @@ class Matrix(AST):
     def __str__(self):
         return f'{self.__class__.__name__}'
 
-    def __repr__(self):
-        return repr(self.rows)
+    def to_py(self):
+        to_return = []
+        for row in self.rows:
+            to_return.append([x.to_py() for x in row])
+        return to_return
 
     def __bool__(self):
         return bool(len(self))
