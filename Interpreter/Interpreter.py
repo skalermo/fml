@@ -47,6 +47,11 @@ class Interpreter(NodeVisitor):
             '-': lambda: None
         }
 
+    def find_var(self, id):
+        if (found := self.env.get_var(id)) is None:
+            self.error(error_code=ErrorCode.ID_NOT_FOUND, id=id)
+        return found
+
     def interpret(self, program):
         return self.visit(program)
 
@@ -111,10 +116,30 @@ class Interpreter(NodeVisitor):
         pass
 
     def visit_MatrixSubscripting(self, mtrx_subs):
-        pass
+        matrix = self.find_var(mtrx_subs.id)
+        row_idx = self.visit(mtrx_subs.row_index)
+        column_idx = self.visit(mtrx_subs.column_index)
+
+        if isinstance(row_idx, Scalar) and not row_idx.value.is_integer():
+            self.error(error_code=ErrorCode.FLOAT_IDX,
+                       description=f'Row index of matrix {mtrx_subs.id}')
+        if isinstance(column_idx, Scalar) and not row_idx.value.is_integer():
+            self.error(error_code=ErrorCode.FLOAT_IDX,
+                       description=f'Column index of matrix {mtrx_subs.id}')
+
+        if row_idx is not None and column_idx is not None:
+            pass
+        if row_idx is not None:
+            if row_idx == 'colon':
+                pass
+
+            return matrix.get_item(int(row_idx.to_py()))
+
 
     def visit_MatrixIndex(self, idx):
-        pass
+        if idx.is_colon:
+            return 'colon'
+        return self.visit(idx.expression)
 
     def visit_Matrix(self, matrix):
         return matrix
@@ -129,6 +154,9 @@ class Interpreter(NodeVisitor):
 
     def visit_String(self, string):
         return string
+
+    def visit_NoneType(self, none):
+        return None
 
     # binary operations
 
@@ -160,7 +188,7 @@ class Interpreter(NodeVisitor):
                           description=f'Addition on {type(a)} and {type(b)}')
 
     def negation(self, a):
-        return not a
+        return Scalar(int(not a))
 
     def logic_or(self, a, b):
         return Scalar(int(a or b))

@@ -17,6 +17,8 @@ class Scalar(AST):
         return f'{self.__class__.__name__}: {self.value}'
 
     def __eq__(self, other):
+        if not isinstance(other, Scalar):
+            return False
         return self.value == other.value
 
     def get_value(self):

@@ -34,6 +34,13 @@ class Matrix(AST):
                     return False
         return True
 
+    def get_item(self, idx):
+        if idx >= len(self):
+            return None
+        rowno = idx // self.shape[1]
+        colno = idx % self.shape[1]
+        return self.rows[rowno][colno]
+
     def get_shape(self):
         return Matrix([list(self.shape)])
 
