@@ -192,12 +192,15 @@ class Interpreter(NodeVisitor):
 
     def mul(self, a, b):
         if isinstance(a, Scalar) and isinstance(b, Scalar):
-            return Scalar(a.value - b.value)
+            return Scalar(a.value * b.value)
         if isinstance(a, Matrix) and isinstance(b, Matrix):
             if a.shape[1] != b.shape[0]:
                 self.error(error_code=ErrorCode.MATRIX_DOT_SHAPE_MISMATCH,
                            description=f'Shapes: {a.shape} and {b.shape}')
             return self.dot(a, b)
+        if isinstance(a, Matrix) and isinstance(b, Scalar):
+            return self.for_each_element_do(self.mul, a, b)
+
         self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
                    description=f'Multiplication on {type(a)} and {type(b)}')
 
@@ -272,7 +275,16 @@ class Interpreter(NodeVisitor):
         return Matrix(rows)
 
     def dot(self, a, b):
-        pass
+        result = []
+        for i in range(a.shape[0]):
+            result.append([])
+            for j in range(b.shape[1]):
+                result[i].append(Scalar(0))
+                for k in range(b.shape[0]):
+                    mul = self.mul(a[i][k], b[k][j])
+                    add = self.add(result[i][j], mul)
+                    result[i][j] = add
+        return Matrix(result)
 
     def error(self, error_code=None, id='', description=''):
         raise InterpreterError(error_code, id, description)
