@@ -13,8 +13,11 @@ class Matrix(AST):
     def __len__(self):
         return self.shape[0] * self.shape[1]
 
-    def __repr__(self):
+    def __str__(self):
         return f'{self.__class__.__name__}'
+
+    def __repr__(self):
+        return repr(self.rows)
 
     def __bool__(self):
         return bool(len(self))
@@ -27,6 +30,15 @@ class Matrix(AST):
                 if elem1 != elem2:
                     return False
         return True
+
+    def get_shape(self):
+        return Matrix([list(self.shape)])
+
+    def get_row(self, idx):
+        return Matrix([self.rows[idx]])
+
+    def get_column(self, idx):
+        return Matrix([[row[idx] for row in self.rows]])
 
 
 class MatrixIndex(AST):
