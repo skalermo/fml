@@ -26,6 +26,9 @@ class ErrorCode:
     EMPTY_MTRX_OP = 'Cannot perform operation on empty matrix'
     MATRIX_DOT_SHAPE_MISMATCH = 'Cannot perform dot product for matrices'
     MATRIX_FLOAT_POW = 'Cannot perform matrix to the float power operation'
+    FLOAT_IDX = 'Matrix index cannot be float'
+    OUT_OF_RANGE = 'Matrix index out of range'
+    UNSUPPORTED_UNARY_OPERATION = 'Operation for this type not supported'
 
 
 class ErrorDescription:
