@@ -122,7 +122,8 @@ class Interpreter(NodeVisitor):
     def visit_MatrixSubscripting(self, mtrx_subs):
         matrix = self.find_var(mtrx_subs.id)
         row_idx = self.visit(mtrx_subs.row_index)
-        column_idx = self.visit(mtrx_subs.column_index)
+        column_idx = None if mtrx_subs.column_index is None \
+            else self.visit(mtrx_subs.column_index)
 
         if isinstance(row_idx, Scalar) and not row_idx.value.is_integer():
             self.error(error_code=ErrorCode.FLOAT_IDX,
@@ -185,9 +186,6 @@ class Interpreter(NodeVisitor):
 
     def visit_String(self, string):
         return string
-
-    def visit_NoneType(self, none):
-        return None
 
     # binary operations
 
