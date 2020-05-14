@@ -1,5 +1,6 @@
 import unittest
-from tests.interpreter.interpret import interpret
+from tests.interpreter.utils import interpret, should_fail
+from Error import ErrorCode, ErrorDescription
 
 
 class TestMtrxSubs(unittest.TestCase):
@@ -70,6 +71,15 @@ class TestMtrxSubs(unittest.TestCase):
         self.assertEqual([[1, 2, 3],
                           [4, 5, 6],
                           [7, 8, 9]], interpret(s).to_py())
+
+    def test_single_index_out_of_range(self):
+        s = 'a = [1, 2, 3, 4];' \
+            'a[5];'
+        should_fail(self, s, expected_error_code=ErrorCode.OUT_OF_RANGE)
+
+        s = 'a = [1, 2, 3, 4];' \
+            'a[-1];'
+        should_fail(self, s, expected_error_code=ErrorCode.OUT_OF_RANGE)
 
 
 if __name__ == '__main__':
