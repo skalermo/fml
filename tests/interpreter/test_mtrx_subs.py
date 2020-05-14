@@ -25,6 +25,52 @@ class TestMtrxSubs(unittest.TestCase):
             'ret a[12];'
         self.assertEqual(34, interpret(s).to_py())
 
+    def test_double_idx(self):
+        s = 'a = [1, 2, 3;' \
+            '     3, 4, 5];' \
+            'ret a[0, 2];'
+        self.assertEqual(3, interpret(s).to_py())
+
+        s = 'a = [1, 2, 3;' \
+            '     3, 4, 5];' \
+            'ret a[1, 1];'
+        self.assertEqual(4, interpret(s).to_py())
+
+    def test_row_colon_index(self):
+        s = 'a = [1, 2, 3;' \
+            '     4, 5, 6;' \
+            '     7, 8, 9];' \
+            'ret a[:, 0];'
+        self.assertEqual([[1, 4, 7]], interpret(s).to_py())
+
+        s = 'a = [1, 2, 3;' \
+            '     4, 5, 6;' \
+            '     7, 8, 9];' \
+            'ret a[:, 2];'
+        self.assertEqual([[3, 6, 9]], interpret(s).to_py())
+
+    def test_column_colon_index(self):
+        s = 'a = [1, 2, 3;' \
+            '     4, 5, 6;' \
+            '     7, 8, 9];' \
+            'ret a[1, :];'
+        self.assertEqual([[4, 5, 6]], interpret(s).to_py())
+
+        s = 'a = [1, 2, 3;' \
+            '     4, 5, 6;' \
+            '     7, 8, 9];' \
+            'ret a[2, :];'
+        self.assertEqual([[7, 8, 9]], interpret(s).to_py())
+
+    def test_double_colon_index(self):
+        s = 'a = [1, 2, 3;' \
+            '     4, 5, 6;' \
+            '     7, 8, 9];' \
+            'ret a[:, :];'
+        self.assertEqual([[1, 2, 3],
+                          [4, 5, 6],
+                          [7, 8, 9]], interpret(s).to_py())
+
 
 if __name__ == '__main__':
     unittest.main()
