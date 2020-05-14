@@ -8,13 +8,56 @@ class Matrix(AST):
         self.shape = (len(rows), 0 if not rows else len(rows[0]))
 
     def __getitem__(self, item):
+        if item >= self.shape[0]:
+            return None
         return self.rows[item]
 
-    def __len__(self):
-        return sum([len(row) for row in self.rows])
+    def __setitem__(self, key, value):
+        self.rows[key] = value
 
-    def __repr__(self):
+    def __len__(self):
+        return self.shape[0] * self.shape[1]
+
+    def __str__(self):
         return f'{self.__class__.__name__}'
+
+    def to_py(self):
+        return [row.to_py() for row in self.rows]
+
+    def __bool__(self):
+        return bool(len(self))
+
+    def __eq__(self, other):
+        if self.shape != other.shape:
+            return False
+        for row1, row2 in zip(self.rows, other.rows):
+            for elem1, elem2 in zip(row1, row2):
+                if elem1 != elem2:
+                    return False
+        return True
+
+    def get_item_by_single_idx(self, idx):
+        if idx >= len(self) or idx < 0:
+            return None
+        rowno = idx // self.shape[1]
+        colno = idx % self.shape[1]
+        return self.rows[rowno][colno]
+
+    def get_shape(self):
+        return Matrix([list(self.shape)])
+
+    def get_row(self, idx):
+        if idx >= self.shape[0] or idx < 0:
+            return None
+        return Matrix([self.rows[idx]])
+
+    def get_column(self, idx):
+        if idx >= self.shape[1] or idx < 0:
+            return None
+        return Matrix([MatrixRow([row[idx] for row in self.rows])])
+
+    def copy(self):
+        return Matrix(self.rows[:])
 
 
 class MatrixRow:
@@ -22,10 +65,30 @@ class MatrixRow:
         self.expressions = expressions
 
     def __getitem__(self, item):
+        if item >= len(self):
+            return None
         return self.expressions[item]
+
+    def __setitem__(self, key, value):
+        self.expressions[key] = value
 
     def __len__(self):
         return len(self.expressions)
+
+    def __bool__(self):
+        return bool(len(self))
+
+    def __str__(self):
+        return f'{self.__class__.__name__}'
+
+    def __eq__(self, other):
+        pass
+
+    def to_py(self):
+        return [expression.to_py() for expression in self.expressions]
+
+    def append(self, param):
+        self.expressions.append(param)
 
 
 class MatrixIndex(AST):

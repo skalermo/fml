@@ -16,10 +16,19 @@ class ErrorCode:
     EXPECTED_NOT_NONE = 'No object parsed.'
 
     MTRX_ROW_LEN_MISMATCH = 'Matrix should have rows of the same length'
-    ASSIGNTONOTID = 'Cannot assign to non-identifier'
+    ASSIGN_TO_NOT_ID = 'Cannot assign to non-identifier'
 
     ID_NOT_FOUND = 'Identifier not found'
     DUPLICATE_ID = 'Duplicate id found'
+    UNSUPPORTED_OPERATION = 'Operation for these types not supported'
+    MATRIX_SHAPE_MISMATCH = 'Shapes of matrices do not match'
+    ZERO_DIVISION = 'Division or modulo by zero'
+    EMPTY_MTRX_OP = 'Cannot perform operation on empty matrix'
+    MATRIX_DOT_SHAPE_MISMATCH = 'Cannot perform dot product for matrices'
+    MATRIX_FLOAT_POW = 'Cannot perform matrix to the float power operation'
+    FLOAT_IDX = 'Matrix index cannot be float'
+    OUT_OF_RANGE = 'Matrix index out of range'
+    UNSUPPORTED_UNARY_OPERATION = 'Operation for this type not supported'
 
 
 class ErrorDescription:
@@ -128,5 +137,17 @@ class ParserError(Error):
 
 
 class InterpreterError(Error):
-    def __init__(self, message):
-        super().__init__(message)
+    def __init__(self, error_code, id, description):
+        self.error_code = error_code
+        self.id = id
+        self.description = description
+
+        if id:
+            id = ''.join(['"', id, '"'])
+        message = f'{type(self).__name__}: {error_code} {id}\n'
+        if description:
+            description += '\n'
+
+        self.message = ''.join([message, description])
+
+        super().__init__(self.message)
