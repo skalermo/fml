@@ -1,5 +1,5 @@
 import unittest
-from tests.interpreter.interpret import interpret
+from tests.interpreter.utils import interpret
 
 
 class TestDotProduct(unittest.TestCase):
