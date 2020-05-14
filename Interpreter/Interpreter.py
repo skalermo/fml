@@ -130,16 +130,22 @@ class Interpreter(NodeVisitor):
         if row_idx is not None and column_idx is not None:
             if row_idx == 'colon' and column_idx == 'colon':
                 return matrix.copy()
+
             if row_idx == 'colon':
                 return matrix.get_column(int(column_idx.to_py()))
+
             if column_idx == 'colon':
                 return matrix.get_row(int(row_idx.to_py()))
+
+            # if int(column_idx.to_py()) >= matrix.shape[1]:
+            #     self.error(error_code=ErrorCode.OUT_OF_RANGE,
+            #                description=f'Column index of matrix {mtrx_subs.id}')
             return matrix[int(row_idx.to_py())][int(column_idx.to_py())]
+
         if row_idx is not None:
             if row_idx == 'colon':
-                pass
-
-            return matrix.get_item(int(row_idx.to_py()))
+                return matrix.copy()
+            return matrix.get_item_by_single_idx(int(row_idx.to_py()))
 
     def visit_MatrixIndex(self, idx):
         if idx.is_colon:

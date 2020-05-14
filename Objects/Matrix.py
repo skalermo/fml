@@ -34,7 +34,7 @@ class Matrix(AST):
                     return False
         return True
 
-    def get_item(self, idx):
+    def get_item_by_single_idx(self, idx):
         if idx >= len(self):
             return None
         rowno = idx // self.shape[1]
@@ -45,9 +45,13 @@ class Matrix(AST):
         return Matrix([list(self.shape)])
 
     def get_row(self, idx):
+        if idx >= self.shape[0]:
+            return None
         return Matrix([self.rows[idx]])
 
     def get_column(self, idx):
+        if idx >= self.shape[1]:
+            return None
         return Matrix([[row[idx] for row in self.rows]])
 
     def copy(self):
