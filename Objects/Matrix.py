@@ -50,6 +50,9 @@ class Matrix(AST):
     def get_column(self, idx):
         return Matrix([[row[idx] for row in self.rows]])
 
+    def copy(self):
+        return Matrix(self.rows[:])
+
 
 class MatrixIndex(AST):
     def __init__(self, expression, is_colon=False):

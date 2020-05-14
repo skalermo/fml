@@ -123,18 +123,23 @@ class Interpreter(NodeVisitor):
         if isinstance(row_idx, Scalar) and not row_idx.value.is_integer():
             self.error(error_code=ErrorCode.FLOAT_IDX,
                        description=f'Row index of matrix {mtrx_subs.id}')
-        if isinstance(column_idx, Scalar) and not row_idx.value.is_integer():
+        if isinstance(column_idx, Scalar) and not column_idx.value.is_integer():
             self.error(error_code=ErrorCode.FLOAT_IDX,
                        description=f'Column index of matrix {mtrx_subs.id}')
 
         if row_idx is not None and column_idx is not None:
-            pass
+            if row_idx == 'colon' and column_idx == 'colon':
+                return matrix.copy()
+            if row_idx == 'colon':
+                return matrix.get_column(int(column_idx.to_py()))
+            if column_idx == 'colon':
+                return matrix.get_row(int(row_idx.to_py()))
+            return matrix[int(row_idx.to_py())][int(column_idx.to_py())]
         if row_idx is not None:
             if row_idx == 'colon':
                 pass
 
             return matrix.get_item(int(row_idx.to_py()))
-
 
     def visit_MatrixIndex(self, idx):
         if idx.is_colon:
