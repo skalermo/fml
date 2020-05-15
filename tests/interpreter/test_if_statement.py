@@ -83,6 +83,20 @@ class TestIfStatement(unittest.TestCase):
             'ret b;'
         self.assertEqual(0, interpret(s).to_py())
 
+    def test_created_scope(self):
+        s = 'if (1>0)' \
+            '   b = 0;' \
+            'ret b;'
+        self.assertEqual(0, interpret(s).to_py())
+
+        s = 'if (1>0) {' \
+            '   b = 0;' \
+            '}' \
+            'ret b;'
+        should_fail(self, s,
+                    expected_error_code=ErrorCode.ID_NOT_FOUND,
+                    expected_id='b')
+
 
 if __name__ == '__main__':
     unittest.main()
