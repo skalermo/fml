@@ -28,6 +28,8 @@ class ErrorCode:
     MATRIX_FLOAT_POW = 'Cannot perform matrix to the float power operation'
     FLOAT_IDX = 'Matrix index cannot be float'
     OUT_OF_RANGE = 'Matrix index out of range'
+    ROW_INDEX_OUT_OF_RANGE = 'Row index out of range'
+    COLUMN_INDEX_OUT_OF_RANGE = 'Column index out of range'
     UNSUPPORTED_UNARY_OPERATION = 'Operation for this type not supported'
 
 
