@@ -48,8 +48,9 @@ class TestScope(unittest.TestCase):
             '       }' \
             '       a = a + 2;' \
             '   }' \
+            '   a = a + b;' \
             '}' \
-            'ret a + 1;'
+            'ret a;'
         self.assertEqual(4, interpret(s).to_py())
 
     def test_nested_scopes_id_not_found(self):
