@@ -36,13 +36,28 @@ class Scope:
         self.parent_scope = parent_scope
         self.symbol_table = {}
 
-    def add_var(self, var: Identifier, evaluated_value):
-        # To add variable to a scope means that
+    def set_var(self, var: Identifier, evaluated_value):
+        # To set variable means that
         # the variable got assigned.
-        # First check if the variable exists in this scope, if it does, reassign it.
+        # First check if the variable exists
+        # in one of the parent scopes and if it does, reassign it.
         # If it doesn't, add it to the symbol table of this scope.
 
-        self.symbol_table[var.get_name()] = evaluated_value
+        if not self.try_to_find_var_and_set_it(var, evaluated_value):
+            self.symbol_table[var.get_name()] = evaluated_value
+
+    def try_to_find_var_and_set_it(self, var: Identifier, evaluated_value):
+        # Check if var is in the current scope.
+        # If it's not check in the parent scope.
+        # Function stops calling itself when var is found and set
+        # or when it reaches global scope where it is stopped.
+        # Returns True if found and set var in current scope.
+        # Otherwise returns what parent returned.
+
+        if var.get_name() in self.symbol_table:
+            self.symbol_table[var.get_name()] = evaluated_value
+            return True
+        return self.parent_scope.try_to_find_var_and_set_it(var, evaluated_value)
 
     def get_var(self, var: Identifier):
         # Loop through all parent scopes (including current scope)
@@ -68,6 +83,17 @@ class GlobalScope(Scope):
     def add_fun_def(self, fun_def: FunctionDefinition):
         self.fun_table[fun_def.get_name()] = fun_def
 
+    def try_to_find_var_and_set_it(self, var: Identifier, evaluated_value):
+        # Current scope should not be the outer scope
+        if self.parent_scope is None:
+            raise Exception
+
+        # We are allowed to change var in the global scope
+        if var.get_name() in self.symbol_table:
+            self.symbol_table[var.get_name()] = evaluated_value
+            return True
+        return False
+
 
 class Environment:
     def __init__(self):
@@ -79,8 +105,8 @@ class Environment:
         self.call_stack = []
         self.fun_call_nesting = 0
 
-    def add_var(self, var: Identifier, evaluated_value):
-        self.current_scope.add_var(var, evaluated_value)
+    def set_var(self, var: Identifier, evaluated_value):
+        self.current_scope.set_var(var, evaluated_value)
 
     def get_var(self, var: Identifier):
         return self.current_scope.get_var(var)
@@ -115,7 +141,7 @@ class Environment:
         fun_scope = Scope(self.global_scope)
         for param in parameters:
             # todo
-            fun_scope.add_var(param, None)
+            fun_scope.set_var(param, None)
         return fun_scope
 
     def destroy_fun_scope(self):

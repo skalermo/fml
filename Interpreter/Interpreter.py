@@ -88,8 +88,10 @@ class Interpreter(NodeVisitor):
             self.visit(do_while_loop.statement)
 
     def visit_CompoundStatement(self, comp_statement):
+        self.env.create_new_local_scope()
         for statement in comp_statement.statement_list:
             self.visit(statement)
+        self.env.destroy_local_scope()
 
     def visit_IfStatement(self, if_statement):
         if self.visit(if_statement.condition_expression):
@@ -102,7 +104,7 @@ class Interpreter(NodeVisitor):
 
     def visit_Assignment(self, assignment):
         rvalue = self.visit(assignment.rvalue)
-        self.env.add_var(assignment.lvalue, rvalue)
+        self.env.set_var(assignment.lvalue, rvalue)
 
     def visit_BinaryOperator(self, bin_op):
         lvalue = self.visit(bin_op.lvalue)
