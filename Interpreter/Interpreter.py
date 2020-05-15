@@ -92,9 +92,9 @@ class Interpreter(NodeVisitor):
             self.visit(statement)
 
     def visit_IfStatement(self, if_statement):
-        if self.visit(if_statement.condition):
+        if self.visit(if_statement.condition_expression):
             self.visit(if_statement.statement)
-        else:
+        elif if_statement.else_statement is not None:
             self.visit(if_statement.else_statement)
 
     def visit_EmptyStatement(self, empty_statement):
