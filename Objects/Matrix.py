@@ -8,7 +8,7 @@ class Matrix(AST):
         self.shape = (len(rows), 0 if not rows else len(rows[0]))
 
     def __getitem__(self, item):
-        if item >= self.shape[0]:
+        if item >= self.shape[0] or item < 0:
             return None
         return self.rows[item]
 
@@ -65,7 +65,7 @@ class MatrixRow:
         self.elements = expressions
 
     def __getitem__(self, item):
-        if item >= len(self):
+        if item >= len(self) or item < 0:
             return None
         return self.elements[item]
 

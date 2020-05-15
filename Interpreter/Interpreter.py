@@ -137,17 +137,21 @@ class Interpreter(NodeVisitor):
                 return matrix.copy()
 
             if row_idx == 'colon':
-                return matrix.get_column(int(column_idx.to_py()))
+                if (column := matrix.get_column(int(column_idx.to_py()))) is None:
+                    self.error(error_code=ErrorCode.COLUMN_INDEX_OUT_OF_RANGE)
+                return column
 
             if column_idx == 'colon':
-                return matrix.get_row(int(row_idx.to_py()))
+                if (row := matrix.get_row(int(row_idx.to_py()))) is None:
+                    self.error(error_code=ErrorCode.ROW_INDEX_OUT_OF_RANGE)
+                return row
 
             if (row := matrix[int(row_idx.to_py())]) is None:
-                self.error(error_code=ErrorCode.OUT_OF_RANGE,
+                self.error(error_code=ErrorCode.ROW_INDEX_OUT_OF_RANGE,
                            description=f'Row index {int(row_idx.to_py())}'
                                        f' in matrix {mtrx_subs.id}')
             if (item := row[int(column_idx.to_py())]) is None:
-                self.error(error_code=ErrorCode.OUT_OF_RANGE,
+                self.error(error_code=ErrorCode.COLUMN_INDEX_OUT_OF_RANGE,
                            description=f'Column index {int(column_idx.to_py())}'
                                        f' in matrix {mtrx_subs.id}')
             return item
