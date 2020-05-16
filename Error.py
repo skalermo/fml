@@ -41,6 +41,7 @@ class ErrorCode:
     UNSUPPORTED_TYPE_ROUND = 'Encountered unsupported type of argument in round()'
     UNSUPPORTED_TYPE_SHAPE = 'Encountered unsupported type of argument in shape()'
     UNSUPPORTED_TYPE_TRANSPOSE = 'Encountered unsupported type of argument in transp()'
+    NOT_ITERABLE = 'Object is not iterable'
 
 
 class ErrorDescription:
