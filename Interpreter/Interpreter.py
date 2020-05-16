@@ -10,6 +10,8 @@ from Error import ErrorCode
 # implement functions:
 # abs, len, max, min, print, round, shape, transp
 
+MAX_RECURSION_DEPTH = 100
+
 
 class ReturnException(Exception):
     def __init__(self, value):
@@ -66,7 +68,7 @@ class Interpreter(NodeVisitor):
                 self.visit(object)
         except ReturnException as re:
             return re.value_to_return
-        return None
+        return Scalar(0)
 
     def visit_FunctionDefinition(self, fun_def):
         self.env.add_fun_def(fun_def)
@@ -119,7 +121,36 @@ class Interpreter(NodeVisitor):
         return self.unary_operations[op.value](rvalue)
 
     def visit_FunctionCall(self, fun_call):
-        pass
+        if (fun_def := self.env.get_fun_def(fun_call.id)) is None:
+            self.error(error_code=ErrorCode.FUN_NOT_DEFINED,
+                       description=f'Function id: {fun_call.id.get_name()}',
+                       id=fun_call.id.get_name())
+
+        to_return = Scalar(0)
+        arguments = []
+        for arg in fun_call.argument_list:
+            arguments.append(self.visit(arg))
+
+        if len(arguments) != len(fun_def.parameter_list):
+            self.error(error_code=ErrorCode.NUMBER_OF_PARAMS_MISMATCH,
+                       description=f'Function {fun_def.id.get_name()} '
+                                   f'takes {len(fun_def.parameter_list)} parameters, '
+                                   f'got {len(arguments)} instead',
+                       id=fun_def.id.get_name())
+
+        if self.env.fun_call_nesting >= MAX_RECURSION_DEPTH:
+            self.error(error_code=ErrorCode.MAX_RECURSION_DEPTH_EXCEED,
+                       id=fun_def.id.get_name())
+
+        self.env.create_new_fun_scope(fun_def.parameter_list, arguments)
+
+        try:
+            self.visit(fun_def.statement)
+        except ReturnException as re:
+            to_return = re.value_to_return
+
+        self.env.destroy_fun_scope()
+        return to_return
 
     def visit_MatrixSubscripting(self, mtrx_subs):
         matrix = self.find_var(mtrx_subs.id)

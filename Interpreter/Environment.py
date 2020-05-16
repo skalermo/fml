@@ -83,6 +83,13 @@ class GlobalScope(Scope):
     def add_fun_def(self, fun_def: FunctionDefinition):
         self.fun_table[fun_def.get_name()] = fun_def
 
+    def get_fun_def(self, fun):
+        if fun.get_name() in self.fun_table:
+            return self.fun_table[fun.get_name()]
+        if self.parent_scope is not None:
+            return self.parent_scope.get_fun_def(fun)
+        return None
+
     def try_to_find_var_and_set_it(self, var: Identifier, evaluated_value):
         # Current scope should not be the outer scope
         if self.parent_scope is None:
@@ -123,33 +130,29 @@ class Environment:
         # but python's garbage collector does the work for us.
         self.current_scope = self.current_scope.parent_scope
 
-    def create_new_fun_scope(self, parameters):
-        # Create 2 scopes
-        # first one only contains function parameters
-        # and is created for convenience
-        # second scope represents scope inside function
+    def create_new_fun_scope(self, parameters, arguments):
+        # Create function scope
+        # store in it function parameters
         # relations of scopes:
-        # global scope <- parameters scope <- function local scope
+        # global scope <- function local scope
 
-        parameters_scope = self._put_parameters_inside_new_scope(parameters)
+        parameters_scope = self._put_parameters_inside_new_scope(parameters, arguments)
         self.call_stack.append(self.current_scope)
-        self.call_stack.append(parameters_scope)
-        self.current_scope = Scope(parameters_scope)
+        # self.call_stack.append(parameters_scope)
+        self.current_scope = parameters_scope  # Scope(parameters_scope)
         self.fun_call_nesting += 1
 
-    def _put_parameters_inside_new_scope(self, parameters):
+    def _put_parameters_inside_new_scope(self, parameters, arguments):
         fun_scope = Scope(self.global_scope)
-        for param in parameters:
-            # todo
-            fun_scope.set_var(param, None)
+
+        for param, arg in zip(parameters, arguments):
+            fun_scope.symbol_table[param.get_name()] = arg
+
         return fun_scope
 
     def destroy_fun_scope(self):
-        # there are 2 scopes that are related to function scope:
-        # current scope and last scope on call stack
-        # "destroy" them
+        # 'destroy' current function scope
         self.current_scope = None
-        self.call_stack.pop()
         self.fun_call_nesting -= 1
 
         # restore scope before function call
@@ -158,6 +161,9 @@ class Environment:
 
     def add_fun_def(self, fun_def):
         self.global_scope.add_fun_def(fun_def)
+
+    def get_fun_def(self, fun):
+        return self.global_scope.get_fun_def(fun)
 
     def _add_builtin_fun_defs(self):
         pass
