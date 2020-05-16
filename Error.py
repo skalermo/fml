@@ -31,6 +31,9 @@ class ErrorCode:
     ROW_INDEX_OUT_OF_RANGE = 'Row index out of range'
     COLUMN_INDEX_OUT_OF_RANGE = 'Column index out of range'
     UNSUPPORTED_UNARY_OPERATION = 'Operation for this type not supported'
+    FUN_NOT_DEFINED = 'Called function is not defined'
+    NUMBER_OF_PARAMS_MISMATCH = 'Wrong number of parameters'
+    MAX_RECURSION_DEPTH_EXCEED = 'Maximum recursion depth exceeded'
 
 
 class ErrorDescription:
