@@ -48,7 +48,7 @@ class TextTreeStructure:
             prefix=''.join(self.prefix),
             char='`' if is_last_child else '|'
         ))
-        if label:
+        if label != '':
             stdout.write(str(label))
 
         self.prefix.append(' ' if is_last_child else '|')
