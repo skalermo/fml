@@ -1,4 +1,5 @@
 from Interpreter.Ast import AST
+from Objects.Scalar import Scalar
 
 
 class Matrix(AST):
@@ -44,7 +45,9 @@ class Matrix(AST):
         return self.rows[rowno][colno]
 
     def get_shape(self):
-        return Matrix([list(self.shape)])
+        rows = Scalar(self.shape[0])
+        cols = Scalar(self.shape[1])
+        return Matrix([MatrixRow([rows, cols])])
 
     def get_row(self, idx):
         if idx >= self.shape[0] or idx < 0:
@@ -58,6 +61,12 @@ class Matrix(AST):
 
     def copy(self):
         return Matrix(self.rows[:])
+
+    def transpose(self):
+        rows = []
+        for idx in range(self.shape[1]):
+            rows.append(MatrixRow([row[idx] for row in self.rows]))
+        return Matrix(rows)
 
 
 class MatrixRow:
