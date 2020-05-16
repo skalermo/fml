@@ -20,7 +20,7 @@ class ErrorCode:
 
     ID_NOT_FOUND = 'Identifier not found'
     DUPLICATE_ID = 'Duplicate id found'
-    UNSUPPORTED_OPERATION = 'Operation for these types not supported'
+    UNSUPPORTED_BINARY_OPERATION = 'Operation for these types not supported'
     MATRIX_SHAPE_MISMATCH = 'Shapes of matrices do not match'
     ZERO_DIVISION = 'Division or modulo by zero'
     EMPTY_MTRX_OP = 'Cannot perform operation on empty matrix'
@@ -28,7 +28,19 @@ class ErrorCode:
     MATRIX_FLOAT_POW = 'Cannot perform matrix to the float power operation'
     FLOAT_IDX = 'Matrix index cannot be float'
     OUT_OF_RANGE = 'Matrix index out of range'
+    ROW_INDEX_OUT_OF_RANGE = 'Row index out of range'
+    COLUMN_INDEX_OUT_OF_RANGE = 'Column index out of range'
     UNSUPPORTED_UNARY_OPERATION = 'Operation for this type not supported'
+    FUN_NOT_DEFINED = 'Called function is not defined'
+    NUMBER_OF_PARAMS_MISMATCH = 'Wrong number of parameters'
+    MAX_RECURSION_DEPTH_EXCEED = 'Maximum recursion depth exceeded'
+    SCALAR_LEN = 'Object of type Scalar has no len()'
+    UNSUPPORTED_TYPE_ABS = 'Encountered unsupported type of argument in abs()'
+    UNSUPPORTED_TYPES_MAX = 'Encountered unsupported types of arguments in max()'
+    UNSUPPORTED_TYPES_MIN = 'Encountered unsupported types of arguments in min()'
+    UNSUPPORTED_TYPE_ROUND = 'Encountered unsupported type of argument in round()'
+    UNSUPPORTED_TYPE_SHAPE = 'Encountered unsupported type of argument in shape()'
+    UNSUPPORTED_TYPE_TRANSPOSE = 'Encountered unsupported type of argument in transp()'
 
 
 class ErrorDescription:

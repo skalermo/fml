@@ -81,6 +81,28 @@ class TestMtrxSubs(unittest.TestCase):
             'a[-1];'
         should_fail(self, s, expected_error_code=ErrorCode.OUT_OF_RANGE)
 
+    def test_row_index_out_of_range(self):
+        s = 'a = [1, 2; 3, 4];' \
+            'a[2, 2];'
+        should_fail(self, s, expected_error_code=ErrorCode.ROW_INDEX_OUT_OF_RANGE)
+
+        s = 'a = [1, 2; 3, 4];' \
+            'a[2, :];'
+        should_fail(self, s, expected_error_code=ErrorCode.ROW_INDEX_OUT_OF_RANGE)
+
+    def test_column_index_out_of_range(self):
+        s = 'a = [1, 2, 3;' \
+            '     4, 5, 6;' \
+            '     7, 8, 9];' \
+            'a[1, 4];'
+        should_fail(self, s, expected_error_code=ErrorCode.COLUMN_INDEX_OUT_OF_RANGE)
+
+        s = 'a = [1, 2, 3;' \
+            '     4, 5, 6;' \
+            '     7, 8, 9];' \
+            'a[:, 4];'
+        should_fail(self, s, expected_error_code=ErrorCode.COLUMN_INDEX_OUT_OF_RANGE)
+
 
 if __name__ == '__main__':
     unittest.main()
