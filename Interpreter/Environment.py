@@ -29,6 +29,7 @@
 
 from Objects.Identifier import Identifier
 from Objects.Function import FunctionDefinition
+from Objects.builtin import BuiltinFunctionCreator
 
 
 class Scope:
@@ -166,4 +167,7 @@ class Environment:
         return self.global_scope.get_fun_def(fun)
 
     def _add_builtin_fun_defs(self):
-        pass
+        for builtin in BuiltinFunctionCreator.get_builtin_fun_defs():
+            self.outer_scope.fun_table[builtin.name] = builtin.get_wrapped_fun()
+
+

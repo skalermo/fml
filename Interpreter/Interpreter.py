@@ -6,9 +6,6 @@ from Objects.String import String
 from Error import InterpreterError
 from Error import ErrorCode
 
-# todo
-# implement functions:
-# abs, len, max, min, print, round, shape, transp
 
 MAX_RECURSION_DEPTH = 100
 
@@ -145,12 +142,81 @@ class Interpreter(NodeVisitor):
         self.env.create_new_fun_scope(fun_def.parameter_list, arguments)
 
         try:
-            self.visit(fun_def.statement)
+            to_return = self.visit(fun_def.statement)
         except ReturnException as re:
             to_return = re.value_to_return
 
         self.env.destroy_fun_scope()
         return to_return
+
+    def visit_Abs(self, abs_builtin):
+        argument = self.env.get_var(abs_builtin.get_parameters())
+        if isinstance(argument, Scalar):
+            return Scalar(abs(argument.value))
+        self.error(error_code=ErrorCode.UNSUPPORTED_TYPE_ABS,
+                   description=f'abs() for type {type(argument)}')
+
+    def visit_Print(self, print_builtin):
+        print(self.env.get_var(print_builtin.get_parameters()).to_py())
+
+    def visit_Len(self, len_builtin):
+        argument = self.env.get_var(len_builtin.get_parameters())
+        if isinstance(argument, Scalar):
+            self.error(ErrorCode.SCALAR_LEN)
+        return Scalar(len(argument))
+
+    def visit_Max(self, max_builtin):
+        a, b = max_builtin.get_parameters()
+        a = self.env.get_var(a)
+        b = self.env.get_var(b)
+        if isinstance(a, Scalar) and isinstance(b, Scalar):
+            if a.value > b.value:
+                return a
+            return b
+        if (isinstance(a, Matrix) and isinstance(b, Matrix)) or\
+                (isinstance(a, String) and isinstance(b, String)):
+            if len(a) > len(b):
+                return a
+            return b
+        self.error(error_code=ErrorCode.UNSUPPORTED_TYPES_MAX,
+                   description=f'max() on types {type(a)} and {type(b)}')
+
+    def visit_Min(self, min_builtin):
+        a, b = min_builtin.get_parameters()
+        a = self.env.get_var(a)
+        b = self.env.get_var(b)
+        if isinstance(a, Scalar) and isinstance(b, Scalar):
+            if a.value < b.value:
+                return a
+            return b
+        if (isinstance(a, Matrix) and isinstance(b, Matrix)) or \
+                (isinstance(a, String) and isinstance(b, String)):
+            if len(a) < len(b):
+                return a
+            return b
+        self.error(error_code=ErrorCode.UNSUPPORTED_TYPES_MIN,
+                   description=f'min() on types {type(a)} and {type(b)}')
+
+    def visit_Round(self, round_builtin):
+        a = self.env.get_var(round_builtin.get_parameters())
+        if isinstance(a, Scalar):
+            return Scalar(round(a.value))
+        self.error(error_code=ErrorCode.UNSUPPORTED_TYPE_ROUND,
+                   description=f'round() on type {type(a)}')
+
+    def visit_Shape(self, shape_builtin):
+        a = self.env.get_var(shape_builtin.get_parameters())
+        if isinstance(a, Matrix):
+            return a.get_shape()
+        self.error(error_code=ErrorCode.UNSUPPORTED_TYPE_SHAPE,
+                   description=f'shape() on type {type(a)}')
+
+    def visit_Transpose(self, transp_builtin):
+        a = self.env.get_var(transp_builtin.get_parameters())
+        if isinstance(a, Matrix):
+            return a.transpose()
+        self.error(error_code=ErrorCode.UNSUPPORTED_TYPE_TRANSPOSE,
+                   description=f'transp() on type {type(a)}')
 
     def visit_MatrixSubscripting(self, mtrx_subs):
         matrix = self.find_var(mtrx_subs.id)
@@ -234,7 +300,7 @@ class Interpreter(NodeVisitor):
             if b.value == 0:
                 self.error(error_code=ErrorCode.ZERO_DIVISION)
             return Scalar(a.value // b.value)
-        return self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+        return self.error(error_code=ErrorCode.UNSUPPORTED_BINARY_OPERATION,
                           description=f'Addition on {type(a)} and {type(b)}')
 
     def modulo(self, a, b):
@@ -242,7 +308,7 @@ class Interpreter(NodeVisitor):
             if b.value == 0:
                 self.error(error_code=ErrorCode.ZERO_DIVISION)
             return Scalar(a.value % b.value)
-        return self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+        return self.error(error_code=ErrorCode.UNSUPPORTED_BINARY_OPERATION,
                           description=f'Addition on {type(a)} and {type(b)}')
 
     def float_division(self, a, b):
@@ -250,7 +316,7 @@ class Interpreter(NodeVisitor):
             if b.value == 0:
                 self.error(error_code=ErrorCode.ZERO_DIVISION)
             return Scalar(a.value / b.value)
-        return self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+        return self.error(error_code=ErrorCode.UNSUPPORTED_BINARY_OPERATION,
                           description=f'Addition on {type(a)} and {type(b)}')
 
     def negation(self, a):
@@ -286,7 +352,7 @@ class Interpreter(NodeVisitor):
         if isinstance(a, Matrix) and isinstance(b, Scalar):
             return self.for_each_element_do(self.add, a, b)
 
-        self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+        self.error(error_code=ErrorCode.UNSUPPORTED_BINARY_OPERATION,
                    description=f'Addition on {type(a)} and {type(b)}')
 
     def sub(self, a, b):
@@ -297,7 +363,7 @@ class Interpreter(NodeVisitor):
                 self.error(error_code=ErrorCode.MATRIX_SHAPE_MISMATCH,
                            description=f'{a.shape} != {b.shape}')
             return self.for_each_element_do(self.sub, a, b)
-        self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+        self.error(error_code=ErrorCode.UNSUPPORTED_BINARY_OPERATION,
                    description=f'Subtraction on {type(a)} and {type(b)}')
 
     def mul(self, a, b):
@@ -311,42 +377,42 @@ class Interpreter(NodeVisitor):
         if isinstance(a, Matrix) and isinstance(b, Scalar):
             return self.for_each_element_do(self.mul, a, b)
 
-        self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+        self.error(error_code=ErrorCode.UNSUPPORTED_BINARY_OPERATION,
                    description=f'Multiplication on {type(a)} and {type(b)}')
 
     def less(self, a, b):
         if isinstance(a, Scalar) and isinstance(b, Scalar):
             return Scalar(int(a.value < b.value))
-        self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+        self.error(error_code=ErrorCode.UNSUPPORTED_BINARY_OPERATION,
                    description=f'Test if less on {type(a)} and {type(b)}')
 
     def greater(self, a, b):
         if isinstance(a, Scalar) and isinstance(b, Scalar):
             return Scalar(int(a.value > b.value))
-        self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+        self.error(error_code=ErrorCode.UNSUPPORTED_BINARY_OPERATION,
                    description=f'Test if greater on {type(a)} and {type(b)}')
 
     def less_or_equal(self, a, b):
         if isinstance(a, Scalar) and isinstance(b, Scalar):
             return Scalar(int(a.value <= b.value))
-        self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+        self.error(error_code=ErrorCode.UNSUPPORTED_BINARY_OPERATION,
                    description=f'Test if less or equal on {type(a)} and {type(b)}')
 
     def greater_or_equal(self, a, b):
         if isinstance(a, Scalar) and isinstance(b, Scalar):
             return Scalar(int(a.value >= b.value))
-        self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+        self.error(error_code=ErrorCode.UNSUPPORTED_BINARY_OPERATION,
                    description=f'Test if greater or equal on {type(a)} and {type(b)}')
 
     def equal(self, a, b):
         if type(a) != type(b):
-            self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+            self.error(error_code=ErrorCode.UNSUPPORTED_BINARY_OPERATION,
                        description=f'Test if equal on {type(a)} and {type(b)}')
         return a == b
 
     def not_equal(self, a, b):
         if type(a) != type(b):
-            self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+            self.error(error_code=ErrorCode.UNSUPPORTED_BINARY_OPERATION,
                        description=f'Test if not equal on {type(a)} and {type(b)}')
         return a != b
 
@@ -358,9 +424,9 @@ class Interpreter(NodeVisitor):
                 self.error(error_code=ErrorCode.MATRIX_FLOAT_POW,
                            description=f'The float is {b.value}')
             result = a
-            for _ in range(int(b.value)-1):
+            for _ in range(int(b.value) - 1):
                 result = self.dot(result, a)
-        self.error(error_code=ErrorCode.UNSUPPORTED_OPERATION,
+        self.error(error_code=ErrorCode.UNSUPPORTED_BINARY_OPERATION,
                    description=f'Power operation on {type(a)} and {type(b)}')
 
     def for_each_element_do(self, operation, a, b):
@@ -379,7 +445,7 @@ class Interpreter(NodeVisitor):
         rows = []
         for row_of_a, row_of_b in zip(a.rows, b.rows):
             row = MatrixRow([])
-            for element_in_row_of_a, element_in_row_of_b\
+            for element_in_row_of_a, element_in_row_of_b \
                     in zip(row_of_a.elements, row_of_b.elements):
                 row.append(operation(element_in_row_of_a, element_in_row_of_b))
             rows.append(row)
