@@ -22,9 +22,6 @@ class Matrix(AST):
     def __str__(self):
         return f'{self.__class__.__name__}'
 
-    def to_py(self):
-        return [row.to_py() for row in self.rows]
-
     def __bool__(self):
         return bool(len(self))
 
@@ -36,6 +33,14 @@ class Matrix(AST):
                 if elem1 != elem2:
                     return False
         return True
+
+    def get_generator(self):
+        for row in self.rows:
+            for item in row:
+                yield item
+
+    def to_py(self):
+        return [row.to_py() for row in self.rows]
 
     def get_item_by_single_idx(self, idx):
         if idx >= len(self) or idx < 0:
