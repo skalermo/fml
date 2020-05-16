@@ -3,6 +3,7 @@ from Interpreter.Environment import Environment
 from Objects.Scalar import Scalar
 from Objects.Matrix import Matrix, MatrixRow
 from Objects.String import String
+from Objects.Identifier import Identifier
 from Error import InterpreterError
 from Error import ErrorCode
 
@@ -75,7 +76,27 @@ class Interpreter(NodeVisitor):
         raise ReturnException(value_to_return)
 
     def visit_ForLoop(self, for_loop):
-        pass
+        iterator = for_loop.iterator
+        if not isinstance(iterator, Identifier):
+            self.error(error_code=ErrorCode.ASSIGN_TO_NOT_ID)
+
+        iterable = for_loop.iterable
+        if isinstance(for_loop.iterable, Identifier):
+            if (iterable := self.env.get_var(for_loop.iterable)) is None:
+                self.error(error_code=ErrorCode.ID_NOT_FOUND)
+
+        if not isinstance(iterable, Matrix) and not isinstance(iterable, String):
+            self.error(error_code=ErrorCode.NOT_ITERABLE)
+
+        self.env.create_new_local_scope()
+
+        for i in iterable.get_generator():
+            if i is None:
+                break
+            self.env.current_scope.symbol_table[iterator.get_name()] = i
+            self.visit(for_loop.statement)
+
+        self.env.destroy_local_scope()
 
     def visit_WhileLoop(self, while_loop):
         while self.visit(while_loop.condition_expression):
@@ -123,7 +144,6 @@ class Interpreter(NodeVisitor):
                        description=f'Function id: {fun_call.id.get_name()}',
                        id=fun_call.id.get_name())
 
-        to_return = Scalar(0)
         arguments = []
         for arg in fun_call.argument_list:
             arguments.append(self.visit(arg))
