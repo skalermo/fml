@@ -1,0 +1,4 @@
+# real life problems
+fun mul_assignments(){
+    new_var = another_new_var = yet_another_var = 0;
+}

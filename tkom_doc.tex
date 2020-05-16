@@ -1,0 +1,502 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{polski}
+
+% source code
+\usepackage{listings}
+
+% railroad diagrams
+\usepackage{rail}
+
+\usepackage{graphicx}
+
+% correct footnotes placement
+\usepackage[bottom]{footmisc}
+
+% links
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+
+% extra level of sections
+\usepackage{titlesec}
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4}
+\titleformat{\paragraph}
+{\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+\usepackage{multirow} 
+\usepackage{makecell}
+
+
+\title{Dokumentacja do projektu z TKOM}
+\author{Roman Moskalenko}
+\date{}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\pagebreak
+
+\section{Treść zadania}
+Interpretacja własnego języka z wbudowanym typem macierzy dwuwymiarowej.
+
+\section{Projekt wstępny}
+\subsection{Opis ogólny}
+
+Fantastic Matrix Language (Fantastyczny język macierzowy, dalej FML) jest językiem skryptowym dynamicznie typowanym. Można go traktować jako uproszczone połączenie \emph{Pythona} i \emph{C}. \hyperlink{foo}{\hypertarget{foo_back}{link}}.
+
+Wszystkie białe znaki (whitespace) są ignorowane
+\footnote{Wyjątkiem są znaki będące zawartością stringa(zapisane pomiędzy nawiasów \textbf{"" }).}
+ przez interpreter, dlatego nie zostaną uwzględnione na większości diagramów co pozwoli je uprościć. Także ignorowane są komentarze poprzedzone znakiem \textbf{\#} (jednoliniowe).
+
+Interpreter musi być w stanie obsługiwać różne typy źródeł: string, plik, strumień.
+
+
+%
+% Słowa kluczowe
+%
+\subsection{Słowa kluczowe}
+
+FML łącznie zawiera 14 słów kluczowych, które są przedstawione poniżej.
+
+\begin{lstlisting}
+and div do else for fun if 
+in mod not or ret while
+\end{lstlisting}
+
+\begin{itemize}
+\item Operatory logiczne: \textbf{and, not, or}
+
+\item Konstrukcje pętlowe: \textbf{do, for, in, while}
+
+\item Operatory arytmetyczne: \textbf{div, mod}
+
+\item Konstrukcje warunkowe: \textbf{else, if}
+
+\item Konstrukcje funkcji: \textbf{fun, ret}
+
+\end{itemize}
+\pagebreak
+
+%
+% Identyfikatory i typy danych
+%
+\subsection{Identyfikatory i typy danych}
+
+\subsubsection{Indentyfikator}
+
+Identyfikatorem jest zmienna, która może reprezentować jeden z trzech typów danych bądź funkcję.
+
+FML oferuje 3 typy danych: \textbf{skalar}, \textbf{macierz} oraz \textbf{string}.
+
+\subsubsection{Skalar}
+
+Skalarem jest stała liczba. Możliwy jest zapis w notacji naukowej.
+
+Przykłady:
+\begin{itemize}
+\item 0, 1, -12.3, 12.3e4, 12.3e-45.
+\end{itemize}
+
+\subsubsection{String}
+String jest to łańcuch symboli poprzedzony i zakończony znakiem \textbf{"}. 
+String nie może brać udziału w wyrażeniach arytmetycznych lub logicznych. Nie może być przechowywany w macierzach. Może być przekazywany jako argument w niektórych funkcjach, stosowany w przypisywaniach. Jest iterowalny.
+
+\medskip
+Przykłady:
+\begin{itemize}
+
+\item "Hello world!\verb+\n+"
+
+\item "Ala nie ma\verb+\t+ kota"
+\end{itemize}
+
+\subsubsection{Macierz}
+Macierz jest tablicą dwuwymiarową, która może zawierać tylko skalary.
+
+Znak \textbf{,} jest używany dla separacji kolejnych elementów w jednym wierszu macierzy. Znak \textbf{;} jest używany dla separacji kolejnych wierszów. Wiersz macierzy nie może być pusty, chyba, że cała macierz jest pusta. Liczba elementów w każdym wierszu macierzy musi być taka sama.
+
+\bigskip
+Przykłady:
+
+\begin{itemize}
+
+\item {[ ]}
+
+\item {[1, 2, 3, 4, 5]}
+
+\item {[1, 2, 3; 4, 5, 6; 7, 8, 9]}
+
+\item {[1, 2, 3, 4;\\
+        5, 6, 7, 8  ]}
+
+\end{itemize}
+
+\subsubsection{Indeksowanie}
+
+Odwołanie do elementów macierzy bądź stringa jest możliwe dzięki operatorowi \textbf{[ ]}. Do elementu macierzy można dostać się za pomocą dwóch indeksów odseparowanych przecinkiem: pierwszy specyfikuje wiersz macierzy, drugi -- kolumnę. Podając zamiast indeksu znak \textbf{:} można odwołać się do wszystkich elementów wiersza/kolumny. W przypadku ujemnego indeksu zostanie zwrócony element licząc od końca.
+
+\medskip
+Przykłady:
+
+\begin{lstlisting}
+m = [1, 2, 3;
+     4, 5, 6]
+     
+m[0, 1] # 2
+
+m[:, 1] # [2, 5]
+
+m[1,:] # [4, 5, 6]
+\end{lstlisting}
+
+W przypadku podania tylko jednego indeksu bez separatora zostanie zwrócony element z wypłaszczonej macierzy. Indeksowanie stringa jest analogiczne do indeksowania w Pythonie.
+
+\begin{lstlisting}
+s = "Hello world!"
+
+s[4] # o
+
+m = [1, 2, 3, 4; 5, 6, 7, 8]
+
+m[5] # 6
+\end{lstlisting}
+
+\subsubsection{Stała}
+
+Stała (\emph{Constant}) jest pewną wartością używaną w wyrażeniach. Może to być skalar bądź macierz.
+
+\pagebreak
+
+\subsection{Wyrażenia i operatory}
+
+\subsubsection{Operatory}
+Operatory są przedstawione w tabeli poniżej.
+
+\begin{table}[ht]
+  \centering
+  \begin{tabular}{ |c|c|c|c| }
+    \hline
+    \textbf{Priorytet} & \textbf{Operator} & \textbf{Opis} \\ [0.5ex] 
+    \hline
+    1 & ** & Potęgowanie \\
+    \hline
+    \multirow{2}{*}{2} & + - & Jednoargumentowy plus i minus \\
+                       & not & Logiczne zaprzeczenie  \\
+    \hline
+    \multirow{2}{*}{3} & * / mod & Mnożenie, dzielenie oraz modulo \\
+                       & div & Dzielenie całkowitoliczbowe \\
+    \hline
+    4 & + - & Dodawanie, odejmowanie \\ 
+    \hline
+    \multirow{2}{*}{5} & $<$ $<=$ & Operatory $<$ oraz $\leq$ \\
+                       & $>$ $>=$ & Operatory $>$ oraz $\geq$ \\
+    \hline
+    6 & == != & Operatory $=$ oraz $\neq$ \\
+    \hline
+    7 & and or & Logiczny iloczyn i suma \\
+    \hline
+    8 & = & Przypisanie \\
+    \hline
+  \end{tabular}
+\end{table}
+
+\subsubsection{Wyrażenia}
+
+Wyrażenie może być pojedynczą stałą, zmienną lub też pewną operacją na zmiennych. Kolejność wykonywanych operacji jest zdefiniowana za pomocą priorytetów operatorów opisanych powyżej. Także mogą być stosowane nawiasy okrągłe: \textbf{(} i \textbf{)}. Wyrażenie nie może być puste, nie może zawierać samych nawiasów.
+
+\subsubsection{Przypisanie wartości identyfikatorowi}
+
+Przypisanie jest szczególnym przypadkiem wyrażenia, jest dokonywane za pomocą operatora przypisania \textbf{=}. 
+
+\subsection{Konstrukcje warunkowe, funkcje, pętle}
+
+\subsubsection{Wyrażenia logiczne}
+
+Zanim przejść do konstrukcji warunkowych trzeba zdefiniować jaką wartość może przyjmować wyrażenie logiczne. FML nie ma specjalnego typu wartości logicznych. Natomiast przyjęto takie założenia.
+
+Wyrażenie logiczne jest \textbf{fałszywe} gdy jest równe jednej z poniższych wartości:
+
+\begin{itemize}
+  \item Skalar zerowy \textbf{0}.
+  \item Pusta macierz \textbf{[ ]}.
+\end{itemize}
+
+W pozostałych przypadkach wyrażenie logiczne będzie \textbf{prawdziwe}.
+
+Jeśli wyrażenie logiczne jest prawdziwe to jego wartość jest równa 1. W przypadku gdy wyrażenie logiczne nie jest prawdziwe wartość jego jest zerowa.
+
+\subsubsection{Konstrukcje warunkowe}
+
+Do konstrukcji warunkowych używane są słowa kluczowe \textbf{if} oraz \textbf{else}. Gramatyka języka umożliwia zagnieżdżanie tych konstrukcji.
+
+Przykłady:
+\lstset{language=Python}
+\begin{lstlisting}
+if (a<b) a=b;
+else {
+  a = a - 10;
+  b = b * 2;
+}
+
+if (a)
+  if (b) {
+    b = c+d;
+  }
+  else
+    a = c+d;
+    
+if (a) {
+  if (b)
+    b = b + 10;
+} else { 
+  a = a + 10;
+}
+
+\end{lstlisting}
+
+\subsubsection{Funkcje}
+
+Deklaracja funkcji rozpoczyna się od słowa kluczowego \textbf{fun}.
+Po nim następuje identyfikator funkcji. Parametry funkcji należy opisać w nawiasach jako identyfikatory odseparowane przecinkiem. Nawiasy puste oznaczają brak parametrów. Na koniec jest ciało funkcji.
+
+\medskip
+
+Przykład:
+
+\begin{lstlisting}
+fun my_function(parameter1, parameter2)
+  a = parameter1 + parameter2;
+  
+\end{lstlisting}
+
+Aby zwrócić wartość przez funkcję należy użyć słowa kluczowego \textbf{ret}. Domyślną wartością zwracaną przez funkcje jest \textbf{0}.
+
+\medskip
+Przykład:
+
+\begin{lstlisting}
+fun my_function(parameter)
+  ret parameter + 1;
+
+\end{lstlisting}
+
+Aby wywołać istniejącą funkcje należy podać jej identyfikator oraz argumenty wywołania w nawiasach okrągłych.
+
+\medskip
+Przykład:
+
+\begin{lstlisting}
+my_function();
+my_function(1);
+my_function(a, b);
+\end{lstlisting}
+
+Funkcje mogą być definiowane przez użytkownika tylko w globalnym zakresie programu (nie można definiować węwnatrz pętli, innych funkcji itd.)
+
+\paragraph{Funkcje wbudowane}
+
+\medskip
+Do wbudowanych należa funkcje:
+
+\begin{itemize}
+
+  \item abs() -- zwraca wartość bezwzględną argumentu,
+  \item len() -- zwraca długość (liczbę elementów) objektu,
+  \item max() -- zwraca największą liczbę z podanej sekwencji,
+  \item min() -- zwraca najmniejszą liczbę z podanej sekwencji,
+  \item print() -- wypisuje na konsole podane argumenty,
+  \item round() -- zwraca zaokrąglony skalar,
+  \item shape() -- zwraca macierz zawierającą wymiary podanego argumentu,
+  \item transp() -- odwraca podaną macierz.
+  
+\end{itemize}
+
+\subsubsection{Pętle}
+
+W FML wyróżnia się 3 typy pętli: \textbf{for loop}, \textbf{while loop}, \textbf{do while loop}.
+
+\medskip
+
+Pętle \textbf{for loop} przeznaczone do iterowania po macierzy lub stringu. Do tego używa się słowa kluczowego \textbf{in}, który rozwija iterowalny zbiór.
+
+\medskip
+Przykład wyliczenia sumy wszystkich elementów macierzy:
+
+\begin{lstlisting}
+m = [1, 2; 3.5, 4.5];
+s = 0.0;
+for (i in m) {
+  s = s + i;
+}
+\end{lstlisting}
+
+Pętla mogła również zostać zapisana w sposób następujący:
+\begin{lstlisting}
+...
+for (i in m)
+  s = s + i;
+\end{lstlisting}
+
+W pętlach \textbf{while} instrukcje są wykonywane póki jest spełniony warunek. W przypadku \textbf{do while loop} zawartość pętli uruchomi się co najmniej raz niezależnie od tego czy spełniony warunek pętli. Składnia jest analogiczna do języka \textbf{C}.
+
+\medskip
+Przykłady wypisania liczb od 1 do 10:
+
+\begin{lstlisting}
+
+i = 1
+while (i <= 10) {
+  print(i);
+  i = i + 1;
+}
+
+i = 1;
+do {
+  print(i);
+  i = i + 1;
+} while (i <= 10);
+
+\end{lstlisting}
+
+FML nie rozpoznaje słów kluczowych \textbf{break} i \textbf{continue}. Nie jest możliwe ich użycie węwnątrz konstrukcji pętlowych.
+
+\pagebreak
+
+\section{Diagramy składniowe}
+
+\begin{rail}
+program : (statementList | functionDeclaration)+
+\end{rail}
+
+\begin{rail}
+statementList : (statement)+ 
+\end{rail}
+
+\begin{rail}
+compoundStatement : '<' statementList '>'
+\end{rail} \footnote{Uwaga: zamiast \textbf{$< >$} na diagramie powinne stać znaki \textbf{$\{ \}$}. Latexowi z niewiadomego mi powodu nie podoba się wykorzystanie nawiasów klamrowych w diagramach.}
+
+\begin{rail}
+functionDeclaration : 'fun' identifier '(' (identifier + ',')?  ')' statement
+\end{rail}
+
+\begin{rail}
+statement : (((('ret')? expression) | 'do while loop') ';') | 'while loop' | 'for loop' | 'if statement' | compoundStatement
+\end{rail}
+
+\begin{rail}
+doWhileLoop : 'do' statement '(' logicalExpression ')'
+\end{rail}
+
+\begin{rail}
+whileLoop : while '(' logicalExpression ')' statement
+\end{rail}
+
+\begin{rail}
+forLoop : 'for' '(' identifier 'in' (identifier | matrix | string) ')' statement
+\end{rail}
+
+\begin{rail}
+ifStatement : 'if' '(' logicalExpression ')' statement ('else' statement)?
+\end{rail}
+
+\begin{rail}
+expression : logicalExpression | assignment
+\end{rail}
+
+\begin{rail}
+assignment : identifier '=' (logicalExpression | string) 
+\end{rail}
+
+\begin{rail}
+logicalExpression : logicalSubExpression (('or'  logicalSubExpression)*)
+\end{rail}
+
+\begin{rail}
+logicalSubExpression : equalityExpression (('and'  equalityExpression)*)
+\end{rail}
+
+\begin{rail}
+equalityExpression : comparisonExpression ((('==' | '!=') comparisonExpression)*)
+\end{rail}
+
+\begin{rail}
+comparisonExpression : arithmeticExpression ((('<'|'<='|'>'|'>=') arithmeticExpression)*)
+\end{rail}
+
+\begin{rail}
+arithmeticExpression : term ((('+' | '-') term)*)
+\end{rail}
+
+\begin{rail}
+term : miniterm ((('*' | '/' | 'div' | 'mod') miniterm)*)
+\end{rail}
+
+\begin{rail}
+miniterm : ('+' | '-' | not)? microterm
+\end{rail}
+
+\begin{rail}
+microterm : factor ('**' factor)?
+\end{rail}
+
+\begin{rail}
+factor : identifier | constant | functionCall | arraySubscripting |'(' expression ')'
+\end{rail}
+
+\begin{rail}
+functionCall : identifier '(' (expression + ',')? ')'
+\end{rail}
+
+\begin{rail}
+arraySubscripting : identifier '[' (expression | ((expression|':') ',' (expression|':'))) ']'
+\end{rail}
+
+\begin{rail}
+identifier : letter ((letter ? | digit | 'underscore' ) +);     
+\end{rail}
+
+\begin{rail}
+constant : scalar | matrix
+\end{rail}
+
+\begin{rail}
+scalar : ''[scalarNoExp] (('e' | 'E') ('-' | '+')? (digit+))?;
+scalarNoExp : integer ('.' (digit +))?;
+integer : '-' ? ('0' | (digit[1-9] (digit +)));
+\end{rail}
+
+\begin{rail}
+matrix : '[' ((row + ';')?) ']';
+\end{rail}
+
+\begin{rail}
+row : expression + ',';
+\end{rail}
+
+\hspace*{-2cm}\vbox
+{
+  \begin{rail}
+    string : '"' (('character' ('backslash' ('backslash' | '"' | 't' | 'n'))?)+)? '"';
+  \end{rail}
+}
+
+gdzie \emph{character} jest dowolnym znakiem oprócz " i \verb+\+ oraz znaków kontrolnych.
+
+\begin{rail}
+
+  whitespace : (([space]'' | [linefeed]'' | [horizontal tab]'')+)?;  
+
+\end{rail}
+
+\end{document}
