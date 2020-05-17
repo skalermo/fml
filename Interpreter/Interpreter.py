@@ -1,3 +1,4 @@
+from Parser.Parser import Parser
 from Interpreter.Ast import NodeVisitor
 from Interpreter.Environment import Environment
 from Objects.Scalar import Scalar
@@ -17,7 +18,8 @@ class ReturnException(Exception):
 
 
 class Interpreter(NodeVisitor):
-    def __init__(self):
+    def __init__(self, source):
+        self.parser = Parser(source)
         self.env = None
         self.binary_operations = None
         self.unary_operations = None
@@ -53,8 +55,8 @@ class Interpreter(NodeVisitor):
             self.error(error_code=ErrorCode.ID_NOT_FOUND, id=id)
         return found
 
-    def interpret(self, program):
-        return self.visit(program)
+    def interpret(self):
+        return self.visit(self.parser.parse_program())
 
     def visit_Program(self, program):
         self.env = Environment()
@@ -393,7 +395,10 @@ class Interpreter(NodeVisitor):
             if a.shape[1] != b.shape[0]:
                 self.error(error_code=ErrorCode.MATRIX_DOT_SHAPE_MISMATCH,
                            description=f'Shapes: {a.shape} and {b.shape}')
-            return self.dot(a, b)
+            result = self.dot(a, b)
+            if result.shape == (1, 1):
+                return result[0][0]
+            return result
         if isinstance(a, Matrix) and isinstance(b, Scalar):
             return self.for_each_element_do(self.mul, a, b)
 
@@ -450,19 +455,21 @@ class Interpreter(NodeVisitor):
                    description=f'Power operation on {type(a)} and {type(b)}')
 
     def for_each_element_do(self, operation, a, b):
+        rows = []
         if isinstance(b, Scalar):
             if not len(a):
                 self.error(error_code=ErrorCode.EMPTY_MTRX_OP)
             for row_of_a in a.rows:
+                row = MatrixRow([])
                 for i in range(a.shape[1]):
-                    row_of_a[i] = operation(row_of_a[i], b)
-            return a
+                    row.append(operation(row_of_a[i], b))
+                rows.append(row)
+            return Matrix(rows)
 
         # matrix is empty
         if not len(a):
-            return a
+            return a.copy()
 
-        rows = []
         for row_of_a, row_of_b in zip(a.rows, b.rows):
             row = MatrixRow([])
             for element_in_row_of_a, element_in_row_of_b \
