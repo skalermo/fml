@@ -150,15 +150,16 @@ class Interpreter(NodeVisitor):
         for arg in fun_call.argument_list:
             arguments.append(self.visit(arg))
 
-        if fun_def.parameter_list is None:
-            fun_def.make_generic_parameters(arguments)
-            if fun_def.parameter_list is None:
+        parameters = fun_def.parameter_list
+        if parameters is None:
+            parameters = fun_def.make_generic_parameters(arguments)
+            if parameters is None:
                 self.error(error_code=ErrorCode.TOO_MANY_ARGUMENTS)
 
-        if len(arguments) != len(fun_def.parameter_list):
+        if len(arguments) != len(parameters):
             self.error(error_code=ErrorCode.NUMBER_OF_PARAMS_MISMATCH,
                        description=f'Function {fun_def.id.get_name()} '
-                                   f'takes {len(fun_def.parameter_list)} parameters, '
+                                   f'takes {len(parameters)} parameters, '
                                    f'got {len(arguments)} instead',
                        id=fun_def.id.get_name())
 
@@ -166,7 +167,7 @@ class Interpreter(NodeVisitor):
             self.error(error_code=ErrorCode.MAX_RECURSION_DEPTH_EXCEED,
                        id=fun_def.id.get_name())
 
-        self.env.create_new_fun_scope(fun_def.parameter_list, arguments)
+        self.env.create_new_fun_scope(parameters, arguments)
 
         try:
             to_return = self.visit(fun_def.statement)
@@ -188,6 +189,7 @@ class Interpreter(NodeVisitor):
         for param in print_builtin.get_parameters():
             values_to_print.append(self.env.get_var(param).to_py())
         print(*values_to_print)
+        print_builtin.parameter_list = None
 
     def visit_Len(self, len_builtin):
         argument = self.env.get_var(len_builtin.get_parameters())

@@ -19,17 +19,17 @@ class FunctionDefinition(AST):
         return self.id.value
 
     def make_generic_parameters(self, arguments):
-        self.parameter_list = []
+        parameters = []
         if len(arguments) > MAX_GENERIC_PARAMETERS:
-            self.parameter_list = None
-            return
+            return None
 
         if isinstance(self.statement, BuiltinFunction):
-            self.statement.set_parameter_list(self.parameter_list)
+            self.statement.set_parameter_list(parameters)
 
         # chr(97) == 'a'
         for i in range(len(arguments)):
-            self.parameter_list.append(Identifier(chr(97+i)))
+            parameters.append(Identifier(chr(97+i)))
+        return parameters
 
 
 class FunctionCall(AST):
