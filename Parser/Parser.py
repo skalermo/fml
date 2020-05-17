@@ -47,7 +47,7 @@ class Parser:
             return None
         self.lexer.build_next_token()
 
-        fun_id = Identifier(self.expect(TokenType.ID))
+        fun_id = Identifier(self.expect(TokenType.ID).value)
 
         self.expect(TokenType.LPAREN)
 
@@ -76,7 +76,7 @@ class Parser:
         return parameter_list
 
     def expect_parameter(self):
-        return Identifier(self.expect(TokenType.ID))
+        return Identifier(self.expect(TokenType.ID).value)
 
     def try_to_parse_statement(self):
         for try_to_parse_statement in [self.try_to_parse_while_loop,
@@ -154,7 +154,7 @@ class Parser:
 
         self.expect(TokenType.LPAREN)
 
-        iterator = Identifier(self.expect(TokenType.ID))
+        iterator = Identifier(self.expect(TokenType.ID).value)
 
         self.expect(TokenType.IN)
 
@@ -490,7 +490,7 @@ class Parser:
         token_id = self.lexer.current_token
         self.lexer.build_next_token()
 
-        return Identifier(token_id)
+        return Identifier(token_id.value)
 
     def try_to_parse_function_call(self, id):
         if self.lexer.current_token.type != TokenType.LPAREN:
