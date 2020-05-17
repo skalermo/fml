@@ -147,17 +147,17 @@ class TestBuiltins(unittest.TestCase):
         should_fail(self, s, expected_error_code=ErrorCode.UNSUPPORTED_TYPE_SHAPE)
 
     def test_transpose(self):
-        s = 'ret transp([1, 2]);'
+        s = 'ret transpose([1, 2]);'
         self.assertEqual([[1], [2]], interpret(s).to_py())
 
-        s = 'ret transp([1; 2]);'
+        s = 'ret transpose([1; 2]);'
         self.assertEqual([[1, 2]], interpret(s).to_py())
 
-        s = 'transp(1);'
+        s = 'transpose(1);'
         should_fail(self, s, expected_error_code=ErrorCode.UNSUPPORTED_TYPE_TRANSPOSE)
 
         s = 'a = "a";' \
-            'transp(a);'
+            'transpose(a);'
         should_fail(self, s, expected_error_code=ErrorCode.UNSUPPORTED_TYPE_TRANSPOSE)
 
 
