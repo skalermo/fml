@@ -18,6 +18,7 @@ class TextTreeStructure:
         self.prefix: List[str] = []
 
     def add_child(self, do_add_child: Callable, label: str = ''):
+        label = str(label)
         if self.top_level:
             self.top_level = False
 
@@ -49,7 +50,7 @@ class TextTreeStructure:
             char='`' if is_last_child else '|'
         ))
         if label != '':
-            stdout.write(str(label))
+            stdout.write(label)
 
         self.prefix.append(' ' if is_last_child else '|')
         self.prefix.append(' ')
