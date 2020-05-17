@@ -12,7 +12,7 @@ def create_expected_binary_operator(parameters):
     actions = {
         'scalar': lambda value: Scalar(value),
         'op': lambda type: Token(TokenType(type)),
-        'id': lambda id: Identifier(Token(TokenType.ID, id)),
+        'id': lambda id: Identifier(id),
         'prev': lambda _: binop
     }
 

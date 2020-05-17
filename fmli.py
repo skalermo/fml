@@ -1,6 +1,7 @@
 from argparse import ArgumentParser
 from Source.Source import FileSource
 from Interpreter.AstDumper import dumpAST
+from Interpreter.Interpreter import Interpreter
 
 
 def parseArguments() -> vars:
@@ -12,10 +13,12 @@ def parseArguments() -> vars:
 
 def main():
     args = parseArguments()
-    print(args)
+    source = FileSource(args['filename'])
     if args['dump']:
-        source = FileSource(args['filename'])
         dumpAST(source)
+        return
+
+    Interpreter(source).interpret()
 
 
 if __name__ == '__main__':

@@ -1,8 +1,10 @@
+from Parser.Parser import Parser
 from Interpreter.Ast import NodeVisitor
 from Interpreter.Environment import Environment
 from Objects.Scalar import Scalar
 from Objects.Matrix import Matrix, MatrixRow
 from Objects.String import String
+from Objects.Identifier import Identifier
 from Error import InterpreterError
 from Error import ErrorCode
 
@@ -16,7 +18,8 @@ class ReturnException(Exception):
 
 
 class Interpreter(NodeVisitor):
-    def __init__(self):
+    def __init__(self, source):
+        self.parser = Parser(source)
         self.env = None
         self.binary_operations = None
         self.unary_operations = None
@@ -52,8 +55,8 @@ class Interpreter(NodeVisitor):
             self.error(error_code=ErrorCode.ID_NOT_FOUND, id=id)
         return found
 
-    def interpret(self, program):
-        return self.visit(program)
+    def interpret(self):
+        return self.visit(self.parser.parse_program())
 
     def visit_Program(self, program):
         self.env = Environment()
@@ -75,7 +78,27 @@ class Interpreter(NodeVisitor):
         raise ReturnException(value_to_return)
 
     def visit_ForLoop(self, for_loop):
-        pass
+        iterator = for_loop.iterator
+        if not isinstance(iterator, Identifier):
+            self.error(error_code=ErrorCode.ASSIGN_TO_NOT_ID)
+
+        iterable = for_loop.iterable
+        if isinstance(for_loop.iterable, Identifier):
+            if (iterable := self.env.get_var(for_loop.iterable)) is None:
+                self.error(error_code=ErrorCode.ID_NOT_FOUND)
+
+        if not isinstance(iterable, Matrix) and not isinstance(iterable, String):
+            self.error(error_code=ErrorCode.NOT_ITERABLE)
+
+        self.env.create_new_local_scope()
+
+        for i in iterable.get_generator():
+            if i is None:
+                break
+            self.env.current_scope.symbol_table[iterator.get_name()] = i
+            self.visit(for_loop.statement)
+
+        self.env.destroy_local_scope()
 
     def visit_WhileLoop(self, while_loop):
         while self.visit(while_loop.condition_expression):
@@ -123,15 +146,20 @@ class Interpreter(NodeVisitor):
                        description=f'Function id: {fun_call.id.get_name()}',
                        id=fun_call.id.get_name())
 
-        to_return = Scalar(0)
         arguments = []
         for arg in fun_call.argument_list:
             arguments.append(self.visit(arg))
 
-        if len(arguments) != len(fun_def.parameter_list):
+        parameters = fun_def.parameter_list
+        if parameters is None:
+            parameters = fun_def.make_generic_parameters(arguments)
+            if parameters is None:
+                self.error(error_code=ErrorCode.TOO_MANY_ARGUMENTS)
+
+        if len(arguments) != len(parameters):
             self.error(error_code=ErrorCode.NUMBER_OF_PARAMS_MISMATCH,
                        description=f'Function {fun_def.id.get_name()} '
-                                   f'takes {len(fun_def.parameter_list)} parameters, '
+                                   f'takes {len(parameters)} parameters, '
                                    f'got {len(arguments)} instead',
                        id=fun_def.id.get_name())
 
@@ -139,7 +167,7 @@ class Interpreter(NodeVisitor):
             self.error(error_code=ErrorCode.MAX_RECURSION_DEPTH_EXCEED,
                        id=fun_def.id.get_name())
 
-        self.env.create_new_fun_scope(fun_def.parameter_list, arguments)
+        self.env.create_new_fun_scope(parameters, arguments)
 
         try:
             to_return = self.visit(fun_def.statement)
@@ -157,7 +185,11 @@ class Interpreter(NodeVisitor):
                    description=f'abs() for type {type(argument)}')
 
     def visit_Print(self, print_builtin):
-        print(self.env.get_var(print_builtin.get_parameters()).to_py())
+        values_to_print = []
+        for param in print_builtin.get_parameters():
+            values_to_print.append(self.env.get_var(param).to_py())
+        print(*values_to_print)
+        print_builtin.parameter_list = None
 
     def visit_Len(self, len_builtin):
         argument = self.env.get_var(len_builtin.get_parameters())
@@ -373,7 +405,10 @@ class Interpreter(NodeVisitor):
             if a.shape[1] != b.shape[0]:
                 self.error(error_code=ErrorCode.MATRIX_DOT_SHAPE_MISMATCH,
                            description=f'Shapes: {a.shape} and {b.shape}')
-            return self.dot(a, b)
+            result = self.dot(a, b)
+            if result.shape == (1, 1):
+                return result[0][0]
+            return result
         if isinstance(a, Matrix) and isinstance(b, Scalar):
             return self.for_each_element_do(self.mul, a, b)
 
@@ -430,19 +465,21 @@ class Interpreter(NodeVisitor):
                    description=f'Power operation on {type(a)} and {type(b)}')
 
     def for_each_element_do(self, operation, a, b):
+        rows = []
         if isinstance(b, Scalar):
             if not len(a):
                 self.error(error_code=ErrorCode.EMPTY_MTRX_OP)
             for row_of_a in a.rows:
+                row = MatrixRow([])
                 for i in range(a.shape[1]):
-                    row_of_a[i] = operation(row_of_a[i], b)
-            return a
+                    row.append(operation(row_of_a[i], b))
+                rows.append(row)
+            return Matrix(rows)
 
         # matrix is empty
         if not len(a):
-            return a
+            return a.copy()
 
-        rows = []
         for row_of_a, row_of_b in zip(a.rows, b.rows):
             row = MatrixRow([])
             for element_in_row_of_a, element_in_row_of_b \

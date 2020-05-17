@@ -5,12 +5,12 @@ from tests.interpreter.utils import interpret
 class TestDotProduct(unittest.TestCase):
     def test_simple_dot_product(self):
         s = 'ret [1, 2] * [2; 3];'
-        self.assertEqual([[8]], interpret(s).to_py())
+        self.assertEqual(8, interpret(s).to_py())
 
         s = 'a = [1, 2, 0, 0, 0];' \
             'b = [0; 3; 2; 0; 5];' \
             'ret a * b;'
-        self.assertEqual([[6]], interpret(s).to_py())
+        self.assertEqual(6, interpret(s).to_py())
 
     def test_hard_dot_product(self):
         s = 'a = [2, 3, 1, 56;' \
