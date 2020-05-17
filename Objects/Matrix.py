@@ -35,9 +35,13 @@ class Matrix(AST):
         return True
 
     def get_generator(self):
-        for row in self.rows:
-            for item in row:
-                yield item
+        if self.shape[0] > 1:
+            for row in self.rows:
+                yield Matrix([row])
+        else:
+            for row in self.rows:
+                for item in row:
+                    yield item
 
     def to_py(self):
         return [row.to_py() for row in self.rows]
@@ -65,7 +69,7 @@ class Matrix(AST):
         return Matrix([MatrixRow([row[idx] for row in self.rows])])
 
     def copy(self):
-        return Matrix(self.rows[:])
+        return Matrix(self.rows.copy())
 
     def transpose(self):
         rows = []
