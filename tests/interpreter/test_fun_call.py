@@ -121,6 +121,14 @@ class TestFunCall(unittest.TestCase):
             'recursion(99);'
         interpret(s)
 
+    def test_string_as_argument(self):
+        s = 'a = 0;' \
+            'fun some_fun(s)' \
+            '   a = s;' \
+            'some_fun("Hello");' \
+            'ret a;'
+        self.assertEqual('Hello', interpret(s).to_py())
+
 
 if __name__ == '__main__':
     unittest.main()
