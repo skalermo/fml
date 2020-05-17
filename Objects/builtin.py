@@ -103,7 +103,7 @@ class Shape(BuiltinFunction):
 
 
 class Transpose(BuiltinFunction):
-    name = 'transp'
+    name = 'transpose'
     parameter_list = [Identifier(Token(TokenType.ID, 'a'))]
 
     def get_parameters(self):
