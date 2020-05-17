@@ -15,10 +15,19 @@ class TestBuiltins(unittest.TestCase):
             self.assertEqual('[[1.0, 2.0, 3.0, 4.0]]\n', buf.getvalue())
 
         with io.StringIO() as buf, redirect_stdout(buf):
-            s = 'a = "Hello world!";' \
-                'print(a);'
+            s = 'print("Hello world!");'
             interpret(s)
             self.assertEqual('Hello world!\n', buf.getvalue())
+
+        with io.StringIO() as buf, redirect_stdout(buf):
+            s = 'a = "Hello world!";' \
+                'print(a, a, a, a, a);'
+            interpret(s)
+            self.assertEqual('Hello world! '*4 + 'Hello world!\n', buf.getvalue())
+
+    def test_print_too_many_parametrs(self):
+        s = 'print(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);'
+        should_fail(self, s, expected_error_code=ErrorCode.TOO_MANY_ARGUMENTS)
 
     def test_abs(self):
         s = 'a = -1;' \
@@ -48,6 +57,9 @@ class TestBuiltins(unittest.TestCase):
             '     4, 5, 6];' \
             'ret len(a);'
         self.assertEqual(6, interpret(s).to_py())
+
+        s = 'ret len("Hello");'
+        self.assertEqual(5, interpret(s).to_py())
 
         s = 'a = "Hello";' \
             'ret len(a);'
@@ -147,17 +159,17 @@ class TestBuiltins(unittest.TestCase):
         should_fail(self, s, expected_error_code=ErrorCode.UNSUPPORTED_TYPE_SHAPE)
 
     def test_transpose(self):
-        s = 'ret transp([1, 2]);'
+        s = 'ret transpose([1, 2]);'
         self.assertEqual([[1], [2]], interpret(s).to_py())
 
-        s = 'ret transp([1; 2]);'
+        s = 'ret transpose([1; 2]);'
         self.assertEqual([[1, 2]], interpret(s).to_py())
 
-        s = 'transp(1);'
+        s = 'transpose(1);'
         should_fail(self, s, expected_error_code=ErrorCode.UNSUPPORTED_TYPE_TRANSPOSE)
 
         s = 'a = "a";' \
-            'transp(a);'
+            'transpose(a);'
         should_fail(self, s, expected_error_code=ErrorCode.UNSUPPORTED_TYPE_TRANSPOSE)
 
 

@@ -1,0 +1,39 @@
+# initialize variables
+learning_rate = 0.01;
+weights = [0, 0];
+bias = 0;
+epochs = 10;
+training_set_with_labels = [[1, 1], 1;
+                            [1, 0], 0;
+                            [0, 1], 0;
+                            [0, 0], 0];
+
+fun predict(inputs) {
+    sum = inputs * transpose(weights) + bias;
+    if (sum > 0)
+        ret 1;
+    ret 0;
+}
+
+fun train(inputs_with_labels) {
+    current_epoch = 0;
+    prediction = 0;
+    label = 0;
+    do {
+        for (inputs_and_label in inputs_with_labels) {
+            inputs = inputs_and_label[0];
+            label = inputs_and_label[1];
+            prediction = predict(inputs);
+            weights = weights + inputs * learning_rate * (label - prediction);
+            bias = bias + learning_rate * (label - prediction);
+        }
+        current_epoch = current_epoch + 1;
+    } while (current_epoch < epochs);
+}
+
+train(training_set_with_labels);
+
+print(predict([1, 1]));
+
+print(predict([0, 1]));
+

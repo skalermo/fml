@@ -47,7 +47,7 @@ class Parser:
             return None
         self.lexer.build_next_token()
 
-        fun_id = Identifier(self.expect(TokenType.ID))
+        fun_id = Identifier(self.expect(TokenType.ID).value)
 
         self.expect(TokenType.LPAREN)
 
@@ -76,7 +76,7 @@ class Parser:
         return parameter_list
 
     def expect_parameter(self):
-        return Identifier(self.expect(TokenType.ID))
+        return Identifier(self.expect(TokenType.ID).value)
 
     def try_to_parse_statement(self):
         for try_to_parse_statement in [self.try_to_parse_while_loop,
@@ -154,7 +154,7 @@ class Parser:
 
         self.expect(TokenType.LPAREN)
 
-        iterator = Identifier(self.expect(TokenType.ID))
+        iterator = Identifier(self.expect(TokenType.ID).value)
 
         self.expect(TokenType.IN)
 
@@ -255,10 +255,8 @@ class Parser:
         self.lexer.build_next_token()
 
         # Allow nested assignments (right connectivity)
-        for try_to_parse in [self.try_to_parse_string,
-                             self.try_to_parse_expression]:
-            if (rvalue := try_to_parse()) is not None:
-                return Assignment(lvalue, rvalue)
+        if (rvalue := self.try_to_parse_expression()) is not None:
+            return Assignment(lvalue, rvalue)
 
         self.error(error_code=ErrorCode.EXPECTED_NOT_NONE,
                    description=ErrorDescription.NO_RVALUE)
@@ -402,7 +400,8 @@ class Parser:
 
     def try_to_parse_constant(self):
         for try_to_parse_constant in [self.try_to_parse_scalar,
-                                      self.try_to_parse_matrix]:
+                                      self.try_to_parse_matrix,
+                                      self.try_to_parse_string]:
             if (constant := try_to_parse_constant()) is not None:
                 return constant
         return None
@@ -490,7 +489,7 @@ class Parser:
         token_id = self.lexer.current_token
         self.lexer.build_next_token()
 
-        return Identifier(token_id)
+        return Identifier(token_id.value)
 
     def try_to_parse_function_call(self, id):
         if self.lexer.current_token.type != TokenType.LPAREN:

@@ -1,4 +1,9 @@
 from Interpreter.Ast import AST
+from Objects.Identifier import Identifier
+from Objects.Builtins import BuiltinFunction
+
+
+MAX_GENERIC_PARAMETERS = 10
 
 
 class FunctionDefinition(AST):
@@ -12,6 +17,19 @@ class FunctionDefinition(AST):
 
     def get_name(self):
         return self.id.value
+
+    def make_generic_parameters(self, arguments):
+        parameters = []
+        if len(arguments) > MAX_GENERIC_PARAMETERS:
+            return None
+
+        if isinstance(self.statement, BuiltinFunction):
+            self.statement.set_parameter_list(parameters)
+
+        # chr(97) == 'a'
+        for i in range(len(arguments)):
+            parameters.append(Identifier(chr(97+i)))
+        return parameters
 
 
 class FunctionCall(AST):

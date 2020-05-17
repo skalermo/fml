@@ -11,5 +11,15 @@ class String(AST):
     def __len__(self):
         return len(self.value)
 
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def get_generator(self):
+        for char in self.value:
+            yield String(char)
+
     def to_py(self):
         return self.value
+
+    def copy(self):
+        return String(self.value)

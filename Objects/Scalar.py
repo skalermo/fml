@@ -23,3 +23,6 @@ class Scalar(AST):
 
     def get_value(self):
         return self.value
+
+    def copy(self):
+        return Scalar(self.value)

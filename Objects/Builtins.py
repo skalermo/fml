@@ -1,9 +1,6 @@
 from abc import abstractmethod, ABC
 
 
-from Objects.Scalar import Scalar
-from Objects.Function import FunctionDefinition
-from Lexer.Token import Token, TokenType
 from Objects.Identifier import Identifier
 
 
@@ -22,31 +19,25 @@ class BuiltinFunctionCreator:
 
 
 class BuiltinFunction(ABC):
-    @property
-    @abstractmethod
-    def name(self):
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def parameter_list(self):
-        raise NotImplementedError
+    parameter_list = None
+    name = None
 
     @abstractmethod
     def get_parameters(self):
         pass
 
+    def set_parameter_list(self, parameters):
+        self.parameter_list = parameters
+
     def get_wrapped_fun(self):
-        return FunctionDefinition(
-            id = Identifier(Token(TokenType.ID, self.name)),
-            parameter_token_list=self.parameter_list,
-            statement=self
-        )
+        return (Identifier(self.name),
+                self.parameter_list,
+                self)
 
 
 class Abs(BuiltinFunction):
     name = 'abs'
-    parameter_list = [Identifier(Token(TokenType.ID, '_'))]
+    parameter_list = [Identifier('a')]
 
     def get_parameters(self):
         return self.parameter_list[0]
@@ -54,7 +45,7 @@ class Abs(BuiltinFunction):
 
 class Len(BuiltinFunction):
     name = 'len'
-    parameter_list = [Identifier(Token(TokenType.ID, 'a'))]
+    parameter_list = [Identifier('a')]
 
     def get_parameters(self):
         return self.parameter_list[0]
@@ -62,8 +53,8 @@ class Len(BuiltinFunction):
 
 class Max(BuiltinFunction):
     name = 'max'
-    parameter_list = [Identifier(Token(TokenType.ID, 'a')),
-                      Identifier(Token(TokenType.ID, 'b'))]
+    parameter_list = [Identifier('a'),
+                      Identifier('b')]
 
     def get_parameters(self):
         return self.parameter_list[0], self.parameter_list[1]
@@ -71,8 +62,8 @@ class Max(BuiltinFunction):
 
 class Min(BuiltinFunction):
     name = 'min'
-    parameter_list = [Identifier(Token(TokenType.ID, 'a')),
-                      Identifier(Token(TokenType.ID, 'b'))]
+    parameter_list = [Identifier('a'),
+                      Identifier('b')]
 
     def get_parameters(self):
         return self.parameter_list[0], self.parameter_list[1]
@@ -80,15 +71,15 @@ class Min(BuiltinFunction):
 
 class Print(BuiltinFunction):
     name = 'print'
-    parameter_list = [Identifier(Token(TokenType.ID, 'a'))]
+    parameter_list = None
 
     def get_parameters(self):
-        return self.parameter_list[0]
+        return self.parameter_list
 
 
 class Round(BuiltinFunction):
     name = 'round'
-    parameter_list = [Identifier(Token(TokenType.ID, 'a'))]
+    parameter_list = [Identifier('a')]
 
     def get_parameters(self):
         return self.parameter_list[0]
@@ -96,15 +87,15 @@ class Round(BuiltinFunction):
 
 class Shape(BuiltinFunction):
     name = 'shape'
-    parameter_list = [Identifier(Token(TokenType.ID, 'a'))]
+    parameter_list = [Identifier('a')]
 
     def get_parameters(self):
         return self.parameter_list[0]
 
 
 class Transpose(BuiltinFunction):
-    name = 'transp'
-    parameter_list = [Identifier(Token(TokenType.ID, 'a'))]
+    name = 'transpose'
+    parameter_list = [Identifier('a')]
 
     def get_parameters(self):
         return self.parameter_list[0]
