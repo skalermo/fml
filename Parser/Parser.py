@@ -255,10 +255,8 @@ class Parser:
         self.lexer.build_next_token()
 
         # Allow nested assignments (right connectivity)
-        for try_to_parse in [self.try_to_parse_string,
-                             self.try_to_parse_expression]:
-            if (rvalue := try_to_parse()) is not None:
-                return Assignment(lvalue, rvalue)
+        if (rvalue := self.try_to_parse_expression()) is not None:
+            return Assignment(lvalue, rvalue)
 
         self.error(error_code=ErrorCode.EXPECTED_NOT_NONE,
                    description=ErrorDescription.NO_RVALUE)
@@ -402,7 +400,8 @@ class Parser:
 
     def try_to_parse_constant(self):
         for try_to_parse_constant in [self.try_to_parse_scalar,
-                                      self.try_to_parse_matrix]:
+                                      self.try_to_parse_matrix,
+                                      self.try_to_parse_string]:
             if (constant := try_to_parse_constant()) is not None:
                 return constant
         return None
