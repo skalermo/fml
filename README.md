@@ -18,7 +18,7 @@ You can also add flag `-d` (or `--dump`) to dump text AST of the program.
 
 ## Example
 
-Here is an example of how you may program Fibonacci sequence in FML.
+Here is an example of how you may program factorial in FML.
 
 ```code
 fun factorial(n) {
@@ -56,5 +56,5 @@ Program
     `-Scalar: 10.0
 ```
 
-
+You can find more examples in `examples` folder.
 
