@@ -17,3 +17,6 @@ class String(AST):
 
     def to_py(self):
         return self.value
+
+    def copy(self):
+        return String(self.value)
