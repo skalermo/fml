@@ -5,8 +5,8 @@ from Error import InterpreterError
 
 
 def interpret(string_source):
-    parser = Parser(StringSource(string_source))
-    return Interpreter().interpret(parser.parse_program())
+    source = StringSource(string_source)
+    return Interpreter(source).interpret()
 
 
 def should_fail(
@@ -15,9 +15,9 @@ def should_fail(
         expected_error_code=None,
         expected_id=None,
 ):
-    parser = Parser(StringSource(string_source))
+    source = StringSource(string_source)
     with tester.assertRaises(InterpreterError) as e:
-        Interpreter().interpret(parser.parse_program())
+        Interpreter(source).interpret()
     if expected_error_code is not None:
         tester.assertEqual(expected_error_code, e.exception.error_code)
     if expected_id is not None:
