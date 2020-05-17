@@ -150,6 +150,11 @@ class Interpreter(NodeVisitor):
         for arg in fun_call.argument_list:
             arguments.append(self.visit(arg))
 
+        if fun_def.parameter_list is None:
+            fun_def.make_generic_parameters(arguments)
+            if fun_def.parameter_list is None:
+                self.error(error_code=ErrorCode.TOO_MANY_ARGUMENTS)
+
         if len(arguments) != len(fun_def.parameter_list):
             self.error(error_code=ErrorCode.NUMBER_OF_PARAMS_MISMATCH,
                        description=f'Function {fun_def.id.get_name()} '
@@ -179,7 +184,10 @@ class Interpreter(NodeVisitor):
                    description=f'abs() for type {type(argument)}')
 
     def visit_Print(self, print_builtin):
-        print(self.env.get_var(print_builtin.get_parameters()).to_py())
+        values_to_print = []
+        for param in print_builtin.get_parameters():
+            values_to_print.append(self.env.get_var(param).to_py())
+        print(*values_to_print)
 
     def visit_Len(self, len_builtin):
         argument = self.env.get_var(len_builtin.get_parameters())

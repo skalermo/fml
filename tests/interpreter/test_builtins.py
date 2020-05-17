@@ -20,6 +20,16 @@ class TestBuiltins(unittest.TestCase):
             interpret(s)
             self.assertEqual('Hello world!\n', buf.getvalue())
 
+        with io.StringIO() as buf, redirect_stdout(buf):
+            s = 'a = "Hello world!";' \
+                'print(a, a, a, a, a);'
+            interpret(s)
+            self.assertEqual('Hello world! '*4 + 'Hello world!\n', buf.getvalue())
+
+    def test_print_too_many_parametrs(self):
+        s = 'print(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);'
+        should_fail(self, s, expected_error_code=ErrorCode.TOO_MANY_ARGUMENTS)
+
     def test_abs(self):
         s = 'a = -1;' \
             'ret abs(a);'

@@ -1,9 +1,6 @@
 from abc import abstractmethod, ABC
 
 
-from Objects.Scalar import Scalar
-from Objects.Function import FunctionDefinition
-from Lexer.Token import Token, TokenType
 from Objects.Identifier import Identifier
 
 
@@ -22,26 +19,20 @@ class BuiltinFunctionCreator:
 
 
 class BuiltinFunction(ABC):
-    @property
-    @abstractmethod
-    def name(self):
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def parameter_list(self):
-        raise NotImplementedError
+    parameter_list = None
+    name = None
 
     @abstractmethod
     def get_parameters(self):
         pass
 
+    def set_parameter_list(self, parameters):
+        self.parameter_list = parameters
+
     def get_wrapped_fun(self):
-        return FunctionDefinition(
-            id = Identifier(self.name),
-            parameter_token_list=self.parameter_list,
-            statement=self
-        )
+        return (Identifier(self.name),
+                self.parameter_list,
+                self)
 
 
 class Abs(BuiltinFunction):
@@ -80,10 +71,10 @@ class Min(BuiltinFunction):
 
 class Print(BuiltinFunction):
     name = 'print'
-    parameter_list = [Identifier('a')]
+    parameter_list = None
 
     def get_parameters(self):
-        return self.parameter_list[0]
+        return self.parameter_list
 
 
 class Round(BuiltinFunction):
