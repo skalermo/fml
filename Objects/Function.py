@@ -7,9 +7,9 @@ MAX_GENERIC_PARAMETERS = 10
 
 
 class FunctionDefinition(AST):
-    def __init__(self, id, parameter_token_list, statement):
+    def __init__(self, id, parameter_list, statement):
         self.id = id
-        self.parameter_list = parameter_token_list
+        self.parameter_list = parameter_list
         self.statement = statement
 
     def __repr__(self):
