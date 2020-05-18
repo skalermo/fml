@@ -1,0 +1,14 @@
+training_set_with_labels = [[1, 1], 1;
+                            [1, 0], 0;
+                            [0, 1], 0;
+                            [0, 0], 0];
+learning_rate = 0.01;
+weights = [1, 1];
+
+for (inputs_and_label in training_set_with_labels) {
+    print(inputs_and_label);
+    print(training_set_with_labels);
+    inputs = inputs_and_label[0];
+
+    weights = weights + inputs * learning_rate ;
+}
