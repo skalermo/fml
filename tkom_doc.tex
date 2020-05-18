@@ -35,14 +35,34 @@
 \usepackage{multirow} 
 \usepackage{makecell}
 
+% directory tree
+\usepackage{dirtree}
 
 \title{Dokumentacja do projektu z TKOM}
 \author{Roman Moskalenko}
-\date{}
+
 
 \begin{document}
 
-\maketitle
+%\maketitle
+ \begin{titlepage}
+    \centering
+    \vspace*{\fill}
+
+    \vspace*{0.5cm}
+
+    \huge
+    Dokumentacja do projektu z TKOM
+
+    \vspace*{0.5cm}
+
+    \large Roman Moskalenko
+    
+    \large 18 maja 2020
+
+    \vspace*{\fill}
+    \end{titlepage}
+\pagebreak
 \tableofcontents
 \pagebreak
 
@@ -52,7 +72,7 @@ Interpretacja własnego języka z wbudowanym typem macierzy dwuwymiarowej.
 \section{Projekt wstępny}
 \subsection{Opis ogólny}
 
-Fantastic Matrix Language (Fantastyczny język macierzowy, dalej FML) jest językiem skryptowym dynamicznie typowanym. Można go traktować jako uproszczone połączenie \emph{Pythona} i \emph{C}. \hyperlink{foo}{\hypertarget{foo_back}{link}}.
+Fantastic Matrix Language (Fantastyczny język macierzowy, dalej FML) jest językiem skryptowym dynamicznie typowanym. Można go traktować jako uproszczone połączenie \emph{Pythona} i \emph{C}.
 
 Wszystkie białe znaki (whitespace) są ignorowane
 \footnote{Wyjątkiem są znaki będące zawartością stringa(zapisane pomiędzy nawiasów \textbf{"" }).}
@@ -159,7 +179,7 @@ m[:, 1] # [2, 5]
 m[1,:] # [4, 5, 6]
 \end{lstlisting}
 
-W przypadku podania tylko jednego indeksu bez separatora zostanie zwrócony element z wypłaszczonej macierzy. Indeksowanie stringa jest analogiczne do indeksowania w Pythonie.
+W przypadku podania tylko jednego indeksu bez separatora zostanie zwrócony element z wypłaszczonej macierzy.
 
 \begin{lstlisting}
 s = "Hello world!"
@@ -170,10 +190,6 @@ m = [1, 2, 3, 4; 5, 6, 7, 8]
 
 m[5] # 6
 \end{lstlisting}
-
-\subsubsection{Stała}
-
-Stała (\emph{Constant}) jest pewną wartością używaną w wyrażeniach. Może to być skalar bądź macierz.
 
 \pagebreak
 
@@ -203,9 +219,11 @@ Operatory są przedstawione w tabeli poniżej.
     \hline
     6 & == != & Operatory $=$ oraz $\neq$ \\
     \hline
-    7 & and or & Logiczny iloczyn i suma \\
+    7 & and & Logiczny iloczyn \\
     \hline
-    8 & = & Przypisanie \\
+    8 & or & Logiczna suma \\
+    \hline
+    9 & = & Przypisanie \\
     \hline
   \end{tabular}
 \end{table}
@@ -222,7 +240,9 @@ Przypisanie jest szczególnym przypadkiem wyrażenia, jest dokonywane za pomocą
 
 \subsubsection{Wyrażenia logiczne}
 
-Zanim przejść do konstrukcji warunkowych trzeba zdefiniować jaką wartość może przyjmować wyrażenie logiczne. FML nie ma specjalnego typu wartości logicznych. Natomiast przyjęto takie założenia.
+Zanim przejść do konstrukcji warunkowych trzeba zdefiniować jaką wartość może przyjmować wyrażenie logiczne. FML nie ma specjalnego typu wartości logicznych. 
+
+Natomiast przyjęto takie założenia.
 
 Wyrażenie logiczne jest \textbf{fałszywe} gdy jest równe jednej z poniższych wartości:
 
@@ -234,6 +254,13 @@ Wyrażenie logiczne jest \textbf{fałszywe} gdy jest równe jednej z poniższych
 W pozostałych przypadkach wyrażenie logiczne będzie \textbf{prawdziwe}.
 
 Jeśli wyrażenie logiczne jest prawdziwe to jego wartość jest równa 1. W przypadku gdy wyrażenie logiczne nie jest prawdziwe wartość jego jest zerowa.
+Pozwala to na wykorzystanie w wyrażeniach operacji arytmetycznych w połączeniu z operacjami logicznymi.
+
+\smallbreak
+Przykład:
+\begin{lstlisting}
+a = 1 + (1 > 0); # a = 2 
+\end{lstlisting}
 
 \subsubsection{Konstrukcje warunkowe}
 
@@ -372,102 +399,276 @@ FML nie rozpoznaje słów kluczowych \textbf{break} i \textbf{continue}. Nie jes
 
 \pagebreak
 
+\section{Dokumentacja końcowa}
+
+\subsection{Zmiany w projekcie wstępnym}
+
+Dla rozszerzenia funkcjonalności, a w niektórych przypadkach dla uproszczenia implementacji, zostały wprowadzone następujące zmiany:
+
+\begin{itemize}
+
+\item Do tej pory \emph{String} nie był częścią wyrażeń. Zmiana umożliwia wykorzystanie objektów \emph{String} w wyrażeniach, a co za tym idzie w wywołaniach funkcji jako argument.
+
+\item Pusty \emph{String} w wyrażeniach logicznych jest traktowany jako wartość fałszywa.
+
+\item Został wprowadzony obiekt \emph{EmptyStatement}. Musi być zakończony średnikiem.
+
+\item Pozwolono na zagnieżdżone przypisywania.
+
+\item Zrezygnowano z ujemnych indeksów przy odwołaniu się do elementów macierzy.
+
+\item Zrezygnowano z opcji źródła danych ze strumienia.
+
+\item Zostały poprawione diagramy składni.
+
+\end{itemize}
+
+\pagebreak
+\subsection{Opis struktury projektu}
+
+Struktura plików i folderów w projekcie.
+
+\dirtree{%
+.1 ..
+.2 Error.py.
+.2 Source.
+.3 Source.py.
+.3 Position.py.
+.2 Lexer.
+.3 Lexer.py.
+.3 Token.py.
+.2 Parser.
+.3 Parser.py.
+.2 Objects.
+.3 Builtins.py.
+.3 Function.py.
+.3 Identifier.py.
+.3 Matrix.py.
+.3 Operators.py.
+.3 Program.py.
+.3 Scalar.py.
+.3 Statement.py.
+.3 String.py.
+.2 Interpreter.
+.3 Ast.py.
+.3 AstDumper.py.
+.3 TextTreeStructure.py.
+.3 Environment.py.
+.3 Interpreter.py.
+.2 tests.
+.3 lexer.
+.3 parser.
+.3 interpreter.
+.2 examples.
+.2 fmli.py.
+}
+
+\subsubsection{Error.py}
+
+Plik zawiera kody błędów zdefioniowane dla FML oraz klasy błędów.
+
+\begin{itemize}
+
+\item Klasa \emph{Error} - podstawowa klasa dziedzicząca po natywnej klasie Python'a \emph{Exception}, co umożliwia rzucanie wyjątkiem za pomocą tej klasy oraz jej pochodnych.
+
+\item Klasy \emph{LexerError}, \emph{ParserError}, \emph{InterpreterError} - klasy dziedziczące po klasie Error.
+
+\end{itemize}
+
+\subsubsection{Source}
+
+Folder Source zawiera dwa pliki: Source.py oraz Position.py.
+
+Plik Source.py zawiera trzy klasy: \emph{Source} oraz dziedziczące po niej \emph{FileSource} oraz \emph{StringSource} specjalnie dostosowane do obsługi odpowiednio plików oraz stringów jako danych wejściowych dla interpretera.
+
+Zadaniem klasy \emph{Source} jest przygotowanie źródła i zwracania z niego po jednym symbolu, a także śledzenie aktualnie przetwarzanej pozycji w źródle.
+
+\subsubsection{Lexer}
+
+Folder Lexer zawiera dwa pliki: Lexer.py oraz Token.py.
+
+W pliku Token.py zdefiowane są klasy \emph{TokenType} i \emph{Token}.
+
+\emph{TokenType} trzyma w sobie wszytkie typy tokenów rozumiane przez Lexer, a także słowa kluczowe właściwe dla FML. 
+
+Klasa \emph{Lexer} jest odpowiedzialna za przetworzenie źródła danych i wyprodukowanie obiektów Token. Obiekt tej klasy dostaje od obiektu klasy \emph{Source} symbole i próbuje je dopasowywać do znanych typów tokenów.
+
+\subsubsection{Parser}
+
+Folder Parser zawiera pojedynczy plik Parser.py.
+
+W tym pliku znajduje się jedynie klasa \emph{Parser}, zadaniem której jest przetworzenie tokenów otrzymanych od obiekta Lexera i wytworzenie obiektów potrzebnych do stworzenia AST drzewa. Parser parsuje obiekty kierując się gramatyką FML, diagramy ilustrujące ją znajdują się na końcu dokumentacji.
+
+\subsubsection{Objects}
+
+W tym folderze znajdują się klasy, obiekty których są produkowane przez parser z wyjątkiem definicji funkcji wbudowanych (plik Builtins.py), które zostają dodane do AST dopiero na etapie interpretera. Obiekty, które zostają dodane do AST, dziedziczą po specjalnej klasie nazwanej \emph{AST} bądź z pochodnych tej klasy.
+
+\begin{itemize}
+
+\item Function.py - Zawiera klasy \emph{FunctionDefinition} oraz \emph{FunctionCall}.
+
+\item Identifier.py - klasa definiująca obiekt identyfikatora bądź zmiennej w FML.
+
+\item Matrix.py - zawiera klasy \emph{Matrix}, \emph{MatrixRow}, \emph{MatrixIndex}, \emph{MatrixSubscripting}. Klasy \emph{Matrix} oraz \emph{MatrixRow} wykorzystywane do zapisu definicji macierzy, pozostałe dwie klasy obsługują wyłuskanie przy pomocy indeksów elementów macierzy. 
+
+\item Operators.py - zawiera kluczowe klasy, z obiektów których zbudowane są wyrażenia w FML. \emph{BinaryOperator} - obiekt trzyma operator oraz wartości po obu jego stronach, \emph{Assingment} - obsługuje specyficzną sytuację operatora binarnego gdzie operatorem jest znak przypisania. \emph{UnaryOperator} - dla zapisu jednoargumentowego operatora i jego argumentu po prawej stronie. 
+
+\item Program.py - obiekt tej klasy trzyma obiekty najwyższego poziomu, czyli definicje funkcji oraz obiekty klasy \emph{Statement} w zakresie globalnym. Interpreter zaczyna swoje działanie odwiedzając obiekt tej właśnie klasy.
+
+\item Scalar.py - klasa reprezentująca stałe liczbowe. FML operuje tylko na skalarach zmiennoprzecinkowych, które za potrzeby konwertowane na liczby całkowite.
+
+\item Statement.py - w tym pliku znajdują się definicje takich konstrukcji jak instrukcja warunkowa \emph{IfStatement}, pętle \emph{DoWhile}, \emph{While} oraz \emph{For in}. Także są tam klasy \emph{EmtpyStatement}, \emph{CompoundStatement} oraz \emph{ReturnStatement}.
+
+\item String.py - klasa, która opakowuje zwykły string.
+
+\end{itemize}
+
+\subsubsection{Interpreter}
+
+W tym folderze znajduje się wszystko co jest potrzebne do interpretacji przeparsowanych obiektów, a także wyświetlanie drzewa AST w postaci tekstowej.
+
+\begin{itemize}
+
+\item Ast.py - zawiera abstrakcyjna klasę \emph{AST}, po której dziedziczą wszystie obiekty trafiające do AST, oraz klasę \emph{NodeVisitor} - podstawę dla implementacji wzorcu Wizytora.
+
+\item TextTreeStructure.py - przeportowany z C++ dumper clang'a AST drzew na postać tekstową.
+
+\item AstDumper.py - klasa dziedziczy po \emph{AST} oraz \emph{TextTreeStructure}. Odwiedza obiekty drzewa i wypisuje je na konsole.
+
+\item Interpreter.py - klasa dziedzicząca po \emph{NodeVisitor}. Odwiedza obiekty drzewa AST i interpretuje je. Dla odwiedzenia każdego obiektu wymagana jest metoda odpowiednia do konkretnej klasy, która wygląda tak: \emph{visit\_NazwaKlasy}. Także klasa interpretera zawiera wszystkie metody implementujące operacje oferowane przez FML.
+
+\item Environment.py - zawiera klasy \emph{Environment}, \emph{Scope} oraz \emph{GlobalScope}. Obiekt klasy \emph{Environment} oferuje interfejs dla obiektu interpretera. Environment ma pola zakresów globalnych (\emph{GlobalScope}): global scope oraz outer scope, a także trzyma wskazanie na bieżący zakres (current scope). Oprócz tego ma stos, na które odkładane zostają zakresy sprzed wywołaniem funkcji aby móc je potem przywrócić po powrocie z funkcji. Także obiekt klasy \emph{Environment} odpowiada za przygotowanie definicji funkcji wbudowanych.
+
+\end{itemize}
+
+\subsubsection{tests}
+
+W celu sprawdzania poprawności działania zostały napisane testy dla trzech głównych części projektu: leksera, parsera i interpretera. Zarówno są testy pozytywne, jak i negatywne. 
+
+\subsubsection{examples}
+
+Przygotowane zostały działające przykłady programów napisanych w FML.
+
+\subsection{Sposób wykorzystania}
+
+Aby uruchomić interpreter należy wykonać w konsoli polecenie
+
+\begin{lstlisting}[language=bash]
+  $ python fmli.py path/to/file
+\end{lstlisting}
+
+\noindent co zinterpretuje zawartość podanego pliku.
+
+\smallbreak
+
+Aby wyświetlić drzewo AST w postaci tekstowej należy do polecenia dodać flagę \textbf{-d} lub \textbf{- -dump}.
+
+\begin{lstlisting}[language=bash]
+  $ python fmli.py path/to/file -d
+\end{lstlisting}
+
+Minimalna wersja Python wymagana do pracy programu -- 3.8. 
+
+
 \section{Diagramy składniowe}
 
 \begin{rail}
-program : (statementList | functionDeclaration)+
+Program : (Statement | FunctionDeclaration)+
 \end{rail}
 
 \begin{rail}
-statementList : (statement)+ 
-\end{rail}
-
-\begin{rail}
-compoundStatement : '<' statementList '>'
+CompoundStatement : '<' ((Statement)+) '>'
 \end{rail} \footnote{Uwaga: zamiast \textbf{$< >$} na diagramie powinne stać znaki \textbf{$\{ \}$}. Latexowi z niewiadomego mi powodu nie podoba się wykorzystanie nawiasów klamrowych w diagramach.}
 
 \begin{rail}
-functionDeclaration : 'fun' identifier '(' (identifier + ',')?  ')' statement
+FunctionDeclaration : 'fun' Identifier '(' (Identifier + ',')?  ')' Statement
 \end{rail}
 
 \begin{rail}
-statement : (((('ret')? expression) | 'do while loop') ';') | 'while loop' | 'for loop' | 'if statement' | compoundStatement
+Statement : (((('ret')? Expression) | 'DoWhileloop' | 'EmptyStatement') ';') | 'Whileloop' | 'ForLoop' | 'IfStatement' | CompoundStatement
 \end{rail}
 
 \begin{rail}
-doWhileLoop : 'do' statement '(' logicalExpression ')'
+DoWhileLoop : 'do' Statement '(' ConditionExpression ')'
 \end{rail}
 
 \begin{rail}
-whileLoop : while '(' logicalExpression ')' statement
+WhileLoop : while '(' ConditionExpression ')' Statement
 \end{rail}
 
 \begin{rail}
-forLoop : 'for' '(' identifier 'in' (identifier | matrix | string) ')' statement
+ForLoop : 'for' '(' Identifier 'in' (Identifier | Matrix | String) ')' Statement
 \end{rail}
 
 \begin{rail}
-ifStatement : 'if' '(' logicalExpression ')' statement ('else' statement)?
+IfStatement : 'if' '(' ConditionExpression ')' Statement ('else' Statement)?
 \end{rail}
 
 \begin{rail}
-expression : logicalExpression | assignment
+EmptyStatement: ''
 \end{rail}
 
 \begin{rail}
-assignment : identifier '=' (logicalExpression | string) 
+Expression : ConditionExpression | Assignment
 \end{rail}
 
 \begin{rail}
-logicalExpression : logicalSubExpression (('or'  logicalSubExpression)*)
+Assignment : Identifier '=' Expression
 \end{rail}
 
 \begin{rail}
-logicalSubExpression : equalityExpression (('and'  equalityExpression)*)
+ConditionExpression : AndExpression (('or'  AndExpression)*)
 \end{rail}
 
 \begin{rail}
-equalityExpression : comparisonExpression ((('==' | '!=') comparisonExpression)*)
+AndExpression : EqualityExpression (('and'  EqualityExpression)*)
 \end{rail}
 
 \begin{rail}
-comparisonExpression : arithmeticExpression ((('<'|'<='|'>'|'>=') arithmeticExpression)*)
+EqualityExpression : RelativeExpression ((('==' | '!=') RelativeExpression)*)
 \end{rail}
 
 \begin{rail}
-arithmeticExpression : term ((('+' | '-') term)*)
+RelativeExpression : ArithmeticExpression ((('<'|'<='|'>'|'>=') ArithmeticExpression)*)
 \end{rail}
 
 \begin{rail}
-term : miniterm ((('*' | '/' | 'div' | 'mod') miniterm)*)
+ArithmeticExpression : Term ((('+' | '-') Term)*)
 \end{rail}
 
 \begin{rail}
-miniterm : ('+' | '-' | not)? microterm
+Term : Miniterm ((('*' | '/' | 'div' | 'mod') Miniterm)*)
 \end{rail}
 
 \begin{rail}
-microterm : factor ('**' factor)?
+Miniterm : ('+' | '-' | not)? Microterm
 \end{rail}
 
 \begin{rail}
-factor : identifier | constant | functionCall | arraySubscripting |'(' expression ')'
+Microterm : Factor ('**' Factor)?
 \end{rail}
 
 \begin{rail}
-functionCall : identifier '(' (expression + ',')? ')'
+Factor : Constant | FunctionCall | ArraySubscripting |'(' Expression ')'
 \end{rail}
 
 \begin{rail}
-arraySubscripting : identifier '[' (expression | ((expression|':') ',' (expression|':'))) ']'
+FunctionCall : Identifier '(' (Expression + ',')? ')'
+\end{rail}
+
+\scalebox{.9}{
+\hspace*{-2.5cm}\vbox{
+\begin{rail}
+ArraySubscripting : Identifier '[' (ConditionExpression | ((ConditionExpression|':') ',' (ConditionExpression|':'))) ']'
+\end{rail}
+}}
+
+\begin{rail}
+Identifier : letter ((letter ? | digit | 'underscore' ) +);     
 \end{rail}
 
 \begin{rail}
-identifier : letter ((letter ? | digit | 'underscore' ) +);     
-\end{rail}
-
-\begin{rail}
-constant : scalar | matrix
+Constant : Scalar | Matrix | String
 \end{rail}
 
 \begin{rail}
@@ -477,11 +678,11 @@ integer : '-' ? ('0' | (digit[1-9] (digit +)));
 \end{rail}
 
 \begin{rail}
-matrix : '[' ((row + ';')?) ']';
+Matrix : '[' ((row + ';')?) ']';
 \end{rail}
 
 \begin{rail}
-row : expression + ',';
+row : ConditionExpression + ',';
 \end{rail}
 
 \hspace*{-2cm}\vbox
